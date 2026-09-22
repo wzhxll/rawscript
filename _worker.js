@@ -1,10 +1,13 @@
 export default {
   async fetch(request, env, ctx) {
-    const ua = request.headers.get("user-agent") || "";
-    const isBrowser = /Chrome|Firefox|Safari|Edge|Opera/i.test(ua);
-    if(isBrowser){
-      return new Response("Forbidden", {status:403})
+    const KEY = "柳叶Willow leaf";
+    const reqKey = request.headers.get("X-Secret-Key");
+
+    if (reqKey !== KEY) {
+      // 无密钥，直接重定向rickroll链接
+      return Response.redirect("https://b23.tv/MRnB7hi", 302);
     }
+
     return env.ASSETS.fetch(request);
   }
 }
