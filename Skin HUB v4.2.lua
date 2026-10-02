@@ -1,4 +1,165 @@
---脚本是生命 认真看待
+--!native
+do
+    local __execName = "Unknown"
+
+    local ok1, name1 = pcall(function()
+        if identifyexecutor then return identifyexecutor() end
+        return nil
+    end)
+    if ok1 and name1 and name1 ~= "" then
+        __execName = name1
+    end
+
+    local capabilities = {
+        hookmetamethod = false,
+        hookfunction = false,
+        getconnections = false,
+        getupvalues = false,
+        getnilinstances = false,
+        drawing = false,
+        request = false,
+        isMobile = false,
+    }
+
+    pcall(function()
+        local UIS = game:GetService("UserInputService")
+        capabilities.isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
+    end)
+
+    pcall(function()
+        capabilities.hookmetamethod = type(hookmetamethod) == "function"
+    end)
+    pcall(function()
+        capabilities.hookfunction = type(hookfunction) == "function"
+    end)
+    pcall(function()
+        capabilities.getconnections = type(getconnections) == "function"
+    end)
+    pcall(function()
+        capabilities.getupvalues = type(getupvalues) == "function"
+    end)
+    pcall(function()
+        capabilities.getnilinstances = type(getnilinstances) == "function"
+    end)
+    pcall(function()
+        capabilities.drawing = type(Drawing) == "table"
+    end)
+    pcall(function()
+        capabilities.request = type(request) == "function"
+    end)
+
+    local lower = string.lower(__execName or identifyexecutor() or "unknown")
+
+    local isDelta   = lower:find("delta", 1, true)
+    local isArceus  = lower:find("arceus", 1, true)
+    local isCodex   = lower:find("codex", 1, true)
+    local isFluxus     = lower:find("fluxus", 1, true)
+    local isSolara     = lower:find("solara", 1, true)
+    local isXeno       = lower:find("xeno", 1, true)
+    local isWave       = lower:find("wave", 1, true)
+
+    if isDelta then
+        gethui = function()
+            local ok, pg = pcall(function()
+                return game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui")
+            end)
+            if ok and pg then return pg end
+            return game:GetService("CoreGui")
+        end
+    end
+
+    if isArceus or isCodex then
+        capabilities.hookmetamethod = false
+    end
+
+    if isCodex or isFluxus or isHydrogen then
+        capabilities.getconnections = false
+    end
+
+    if isSolara or isXeno or isWave then
+        capabilities.hookmetamethod = true
+        capabilities.getconnections = true
+        capabilities.getupvalues = true
+        capabilities.getnilinstances = true
+        capabilities.drawing = true
+    end
+
+    getgenv().SkinHubExecutor = __execName
+    getgenv().SkinHubCapabilities = capabilities
+
+    print(string.format(
+        "[SkinHub] 执行器: %s | 手机端: %s | Hook: %s | Drawing: %s | Connections: %s",
+        __execName,
+        tostring(capabilities.isMobile),
+        tostring(capabilities.hookmetamethod),
+        tostring(capabilities.drawing),
+        tostring(capabilities.getconnections)
+    ))
+end
+
+task.spawn(function()
+    local Gui, S, L = (gethui and gethui()) or game.CoreGui
+    for _ = 1, 50 do
+        for _, v in pairs(Gui:GetDescendants()) do
+            if v.Name == "Sidebar" and v.Parent and v.Parent:FindFirstChild("Executor") then S = v
+            elseif v:IsA("ImageButton") and v.Image and v.Image:find("logo%.png") and v.Parent then L = v end
+            if S and L then break end
+        end
+        if S and L then break end
+        task.wait(0.1)
+    end
+    if S and L then
+        L.Parent:GetPropertyChangedSignal("Enabled"):Connect(function()
+            if S.Parent then S.Visible = not L.Parent.Enabled end
+        end)
+    end
+end)
+
+local tick_ = os.clock
+local osClock = os.clock
+local mathFloor = math.floor
+local mathCeil = math.ceil
+local mathAbs = math.abs
+local mathMin = math.min
+local mathMax = math.max
+local mathHuge = math.huge
+local mathSqrt = math.sqrt
+local mathRad = math.rad
+local mathClamp = math.clamp
+local v3new = Vector3.new
+local v2new = Vector2.new
+local c3rgb = Color3.fromRGB
+local cfNew = CFrame.new
+local strFormat = string.format
+
+local cloneref = (function()
+    local Native = cloneref
+    if not Native then
+        return function(Object)
+            return Object
+        end
+    end
+
+    local Cache = setmetatable({}, {__mode = "v"})
+
+    return function(Object)
+        if not Object then
+            return nil
+        end
+
+        local Id = Object:GetDebugId()
+        local Cached = Cache[Id]
+        if Cached then
+            return Cached
+        end
+
+        local Cloned = Native(Object)
+        Cache[Id] = Cloned
+
+        return Cloned
+    end
+end)()
+
 if getgenv().SkinHubLoaded then
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Skin HUB v4.2",
@@ -8,10 +169,10 @@ if getgenv().SkinHubLoaded then
     return
 end
 getgenv().SkinHubLoaded = true
-local __SkinHubLoadStart = tick()
+local __SkinHubLoadStart = tick_()
 
-local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
+local HttpService = cloneref(game:GetService("HttpService"))
+local TeleportService = cloneref(game:GetService("TeleportService"))
 local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/"
 
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
@@ -24,6 +185,45 @@ local Options = Library.Options
 local Toggles = Library.Toggles
 
 local L = {} :: any
+
+local ESPLibrary = nil
+
+pcall(function()
+    ESPLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/mstudio45/MSESP/refs/heads/main/source.luau"))()
+end)
+
+if ESPLibrary == nil then
+    ESPLibrary = getgenv().mstudio45_ESP
+end
+
+if ESPLibrary ~= nil then
+    pcall(function()
+        ESPLibrary.GlobalConfig.Billboards = true
+        ESPLibrary.GlobalConfig.Distance = true
+    end)
+end
+
+function L.addESP(settings)
+    if ESPLibrary == nil then
+        return nil
+    end
+
+    local ok, inst = pcall(ESPLibrary.Add, ESPLibrary, settings)
+
+    if ok then
+        return inst
+    end
+
+    return nil
+end
+
+function L.destroyESP(inst)
+    if inst ~= nil then
+        pcall(function()
+            inst:Destroy()
+        end)
+    end
+end
 
 function L.notify(text, time)
     Library:Notify(text, time or 2)
@@ -46,16 +246,18 @@ local function findPath(root, ...)
     return cur
 end
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
-local Lighting = game:GetService("Lighting")
-local Stats = game:GetService("Stats")
-local DataPing = Stats.Network.ServerStatsItem["Data Ping"]
-local CoreGui = game:GetService("CoreGui")
-local MarketplaceService = game:GetService("MarketplaceService")
+local Players = cloneref(game:GetService("Players"))
+local RunService = cloneref(game:GetService("RunService"))
+local UserInputService = cloneref(game:GetService("UserInputService"))
+local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
+local TweenService = cloneref(game:GetService("TweenService"))
+local Lighting = cloneref(game:GetService("Lighting"))
+local Stats = cloneref(game:GetService("Stats"))
+local CoreGui = cloneref(game:GetService("CoreGui"))
+local MarketplaceService = cloneref(game:GetService("MarketplaceService"))
+local Network = Stats and Stats:FindFirstChild("Network")
+local ServerStatsItem = Network and Network:FindFirstChild("ServerStatsItem")
+local DataPing = ServerStatsItem and ServerStatsItem:FindFirstChild("Data Ping")
 local LocalPlayer = Players.LocalPlayer
 
 function L.createFloatingButton(guiName, text, pos, textSize, onClick)
@@ -118,23 +320,6 @@ function L.createFloatingButton(guiName, text, pos, textSize, onClick)
     return sg, btn
 end
 
-local tick_ = os.clock
-local osClock = os.clock
-local mathFloor = math.floor
-local mathCeil = math.ceil
-local mathAbs = math.abs
-local mathMin = math.min
-local mathMax = math.max
-local mathHuge = math.huge
-local mathSqrt = math.sqrt
-local mathRad = math.rad
-local mathClamp = math.clamp
-local v3new = Vector3.new
-local v2new = Vector2.new
-local c3rgb = Color3.fromRGB
-local cfNew = CFrame.new
-local strFormat = string.format
-
 L.GUN_NAME_SET = {
     ["Musket"] = true, ["Carbine"] = true, ["Rifle"] = true, ["Pistol"] = true,
     ["Blunderbuss"] = true, ["Air Rifle"] = true, ["Horse Artillery Pistol"] = true,
@@ -145,18 +330,7 @@ L.GUN_NAME_SET = {
     ["Heavy Pistol"] = true, ["Light Dragoon Pistol"] = true,
 }
 
-L.WEAPON_SPEED_MAP = {
-    ["Musket"] = 1650, ["Rifle"] = 1800, ["Baker Rifle"] = 1750,
-    ["Jäger Rifle"] = 1750, ["Ferguson Rifle"] = 1700, ["Carbine"] = 1550,
-    ["Musketoon"] = 1500, ["Air Rifle"] = 1300, ["Needle Gun"] = 1600,
-    ["Bolt Rifle"] = 1700, ["Pistol"] = 900, ["Flintlock Pistol"] = 880,
-    ["Navy Pistol"] = 920, ["Brass Pistol"] = 890, ["Officer Pistol"] = 950,
-    ["Heavy Pistol"] = 900, ["Light Dragoon Pistol"] = 910,
-    ["Horse Artillery Pistol"] = 930, ["Double Barrel Pistol"] = 900,
-    ["Colt"] = 950, ["Duckfoot Pistol"] = 850, ["Howdah Pistol"] = 880,
-    ["Blunderbuss"] = 650, ["Old Blunderbuss"] = 630, ["Nock Gun"] = 680,
-    ["Shotgun"] = 620,
-}
+L.WEAPON_SPEED_MAP = {}
 
 function L.sharedIsGun(tool)
     if not tool or not tool:IsA("Tool") then return false end
@@ -213,26 +387,7 @@ function L.getHeldToolRemote()
 end
 
 function L.sharedGetCurrentBulletSpeed()
-    local char = LocalPlayer.Character
-    if not char then return 900 end
-    local tool = char:FindFirstChildOfClass("Tool")
-    if not tool then return 900 end
-    local name = tool.Name
-    local speed = L.WEAPON_SPEED_MAP[name]
-    if speed then return speed end
-    local lower = name:lower()
-    if lower:find("rifle") or lower:find("musket") or lower:find("carbine")
-       or lower:find("needle") or lower:find("bolt") or lower:find("jäger")
-       or lower:find("ferguson") or lower:find("musketoon") then
-        return 1650
-    elseif lower:find("pistol") or lower:find("colt") or lower:find("revolver")
-           or lower:find("horse") or lower:find("double") then
-        return 900
-    elseif lower:find("blunderbuss") or lower:find("nock") or lower:find("shotgun") then
-        return 650
-    else
-        return 900
-    end
+    return 900
 end
 
 function L.sharedGetPing()
@@ -358,15 +513,395 @@ pcall(function()
     SkinHubLogo = ImageManager.GetAsset("SkinHubLogo") or SkinHubLogo
 end)
 
+local __LoadTotal = 100
+local Loading = Library:CreateLoading({
+    Title = "Skin HUB v4.2",
+    Icon = SkinHubLogo,
+    IconSize = UDim2.fromOffset(40, 40),
+    CurrentStep = 0,
+    TotalSteps = __LoadTotal,
+    ShowSidebar = false,
+    AlwaysOnTop = true,
+    WindowWidth = 460,
+    WindowHeight = 220,
+    ContentWidth = 460,
+})
+
+Loading:SetMessage("Skin HUB v4.2")
+Loading:SetDescription("正在初始化...")
+Loading:SetCurrentStep(0)
+
+local LOADING_TEXT_WHITE = Color3.fromRGB(255, 255, 255)
+function __StyleLoadingDesc()
+    local sg = Loading and Loading.ScreenGui
+    if not sg then return end
+    local function style(inst)
+        if inst:IsA("TextLabel") then
+            pcall(function()
+                inst.TextColor3 = LOADING_TEXT_WHITE
+                inst.TextStrokeTransparency = 0.4
+                inst.TextStrokeColor3 = Color3.fromRGB(20, 60, 100)
+            end)
+            if not inst:GetAttribute("SkinHubDescLock") then
+                inst:SetAttribute("SkinHubDescLock", true)
+                inst:GetPropertyChangedSignal("TextColor3"):Connect(function()
+                    if inst.TextColor3 ~= LOADING_TEXT_WHITE then
+                        pcall(function() inst.TextColor3 = LOADING_TEXT_WHITE end)
+                    end
+                end)
+            end
+        end
+    end
+    for _, inst in sg:GetDescendants() do style(inst) end
+    if not sg:GetAttribute("SkinHubDescHook") then
+        sg:SetAttribute("SkinHubDescHook", true)
+        sg.DescendantAdded:Connect(function(inst)
+            task.defer(function() style(inst) end)
+        end)
+    end
+end
+task.defer(function() pcall(__StyleLoadingDesc) end)
+
+L.bootLanguage = "中文"
+L.bootLanguagePicked = false
+L.bootLanguageGui = nil
+
+do
+    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "SkinHubLanguagePicker"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.DisplayOrder = 2147483646
+    gui.Parent = playerGui
+
+    local frame = Instance.new("Frame")
+    frame.AnchorPoint = v2new(0.5, 1)
+    frame.Position = UDim2.new(0.5, 0, 1, -24)
+    frame.Size = UDim2.new(0, 280, 0, 76)
+    frame.BackgroundColor3 = c3rgb(8, 14, 26)
+    frame.BackgroundTransparency = 0.15
+    frame.BorderSizePixel = 0
+    frame.Parent = gui
+
+    local frameCorner = Instance.new("UICorner")
+    frameCorner.CornerRadius = UDim.new(0, 10)
+    frameCorner.Parent = frame
+
+    local frameStroke = Instance.new("UIStroke")
+    frameStroke.Color = c3rgb(45, 90, 140)
+    frameStroke.Thickness = 1.5
+    frameStroke.Parent = frame
+
+    local title = Instance.new("TextLabel")
+    title.BackgroundTransparency = 1
+    title.Position = UDim2.new(0, 0, 0, 4)
+    title.Size = UDim2.new(1, 0, 0, 20)
+    title.Font = Enum.Font.GothamBold
+    title.Text = "语言 / Language"
+    title.TextColor3 = Color3.new(1, 1, 1)
+    title.TextSize = 14
+    title.Parent = frame
+
+    local buttons = {}
+
+    local function refreshButtons()
+        for language, button in buttons do
+            if language == L.bootLanguage then
+                button.BackgroundColor3 = c3rgb(80, 200, 255)
+                button.TextColor3 = c3rgb(4, 8, 16)
+            else
+                button.BackgroundColor3 = c3rgb(18, 32, 56)
+                button.TextColor3 = Color3.new(1, 1, 1)
+            end
+        end
+    end
+
+    local function makeButton(language, xOffset)
+        local button = Instance.new("TextButton")
+        button.Position = UDim2.new(0, xOffset, 0, 30)
+        button.Size = UDim2.new(0, 128, 0, 36)
+        button.Font = Enum.Font.GothamBold
+        button.Text = language
+        button.TextSize = 15
+        button.BorderSizePixel = 0
+        button.Parent = frame
+
+        local buttonCorner = Instance.new("UICorner")
+        buttonCorner.CornerRadius = UDim.new(0, 8)
+        buttonCorner.Parent = button
+
+        button.MouseButton1Click:Connect(function()
+            L.bootLanguage = language
+            L.bootLanguagePicked = true
+            refreshButtons()
+            if type(__FinishLoading) == "function" then
+            task.defer(__FinishLoading)
+            end
+        end)
+
+        buttons[language] = button
+    end
+
+    makeButton("中文", 8)
+    makeButton("English", 144)
+    refreshButtons()
+
+    L.bootLanguageGui = gui
+end
+
+function L.destroyBootLanguagePicker()
+    if L.bootLanguageGui == nil then
+        return
+    end
+
+    pcall(function()
+        L.bootLanguageGui:Destroy()
+    end)
+    L.bootLanguageGui = nil
+end
+
+do
+
+    local ACCENT = c3rgb(80, 200, 255)
+    local ACCENT2 = c3rgb(140, 240, 255)
+    local MAIN   = c3rgb(18, 32, 56)
+    local BG     = c3rgb(8, 14, 26)
+    local OUTL   = c3rgb(45, 90, 140)
+    local WHITE  = Color3.new(1,1,1)
+    local DESIRED_FONT = Font.fromEnum(Enum.Font.SciFi)
+
+    local root = Loading.ScreenGui
+
+    local function applyStyle(inst)
+        if inst:IsA("Frame") then
+            local c = inst.BackgroundColor3
+            if c == Color3.fromRGB(15,15,15) then
+                inst.BackgroundColor3 = BG
+            elseif c == Color3.fromRGB(25,25,25) then
+                inst.BackgroundColor3 = MAIN
+            elseif c == Color3.fromRGB(125,85,255) then
+                inst.BackgroundColor3 = ACCENT
+            end
+            if inst.BackgroundColor3 == ACCENT and inst.Size.Y.Offset <= 20 then
+                local g = inst:FindFirstChildOfClass("UIGradient")
+                if not g then
+                    g = Instance.new("UIGradient")
+                    g.Color = ColorSequence.new(ACCENT, ACCENT2)
+                    g.Rotation = 0
+                    g.Parent = inst
+                end
+            end
+        elseif inst:IsA("ImageLabel") then
+            if inst.Size.X.Offset >= 36 then
+                
+            else
+                inst.ImageColor3 = ACCENT
+            end
+        elseif inst:IsA("UIStroke") then
+            inst.Color = OUTL
+        elseif inst:IsA("TextLabel") then
+            inst.TextColor3 = WHITE
+            inst.TextStrokeTransparency = 0.4
+            inst.TextStrokeColor3 = c3rgb(20, 60, 100)
+
+            if not inst:GetAttribute("SkinHubFontGuard") then
+                inst:SetAttribute("SkinHubFontGuard", true)
+                local applying = false
+                inst:GetPropertyChangedSignal("FontFace"):Connect(function()
+                    if applying then return end
+                    if inst.FontFace ~= DESIRED_FONT then
+                        applying = true
+                        inst.FontFace = DESIRED_FONT
+                        applying = false
+                    end
+                end)
+                task.spawn(function()
+                    while inst and inst.Parent do
+                        if inst.FontFace ~= DESIRED_FONT then
+                            inst.FontFace = DESIRED_FONT
+                        end
+                        task.wait(0.15)
+                    end
+                end)
+            end
+            if inst.FontFace ~= DESIRED_FONT then
+                inst.FontFace = DESIRED_FONT
+            end
+
+            if inst.Text == "Skin HUB v4.2" and not inst:GetAttribute("SkinHubTitleFX") then
+                inst:SetAttribute("SkinHubTitleFX", true)
+                local grad = Instance.new("UIGradient")
+                grad.Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0.00, c3rgb(120, 220, 255)),
+                    ColorSequenceKeypoint.new(0.35, c3rgb(200, 245, 255)),
+                    ColorSequenceKeypoint.new(0.65, c3rgb(140, 220, 255)),
+                    ColorSequenceKeypoint.new(1.00, c3rgb(120, 220, 255)),
+                }
+                grad.Parent = inst
+                task.spawn(function()
+                    local t0 = os.clock()
+                    while inst and inst.Parent do
+                        grad.Rotation = (os.clock() - t0) * 60 % 360
+                        RunService.RenderStepped:Wait()
+                    end
+                end)
+            end
+        end
+    end
+
+    for _, d in root:GetDescendants() do
+        pcall(applyStyle, d)
+    end
+    root.DescendantAdded:Connect(function(d)
+        task.defer(function() pcall(applyStyle, d) end)
+    end)
+
+    task.defer(function()
+        for _, d in root:GetDescendants() do
+            if d:IsA("Frame") and d.Size.X.Offset >= 400 and d.Size.Y.Offset >= 180 then
+                local s = d:FindFirstChildOfClass("UIStroke")
+                if s then
+                    s.Color = ACCENT
+                    s.Thickness = 1.5
+                    s.Transparency = 0.4
+                    task.spawn(function()
+                        while d and d.Parent do
+                            local breath = (math.sin(os.clock() * 1.8) + 1) * 0.5
+                            s.Transparency = 0.25 + breath * 0.35
+                            task.wait(0.05)
+                        end
+                    end)
+                end
+                break
+            end
+        end
+    end)
+end
+
+local __loadProgress = 0
+local __loadTarget = 90
+local __loadStop = false
+local __finishStarted = false
+
+task.spawn(function()
+    local msgList = {
+        { 0,  "Skin HUB v4.2",   "正在启动..." },
+        { 15, "初始化界面",       "准备 UI 资源..." },
+        { 35, "加载模块",         "解析脚本模块..." },
+        { 55, "构建功能",         "注册自动化任务..." },
+        { 75, "应用主题",         "调整配色与字体..." },
+        { 85, "收尾工作",         "检查依赖..." },
+    }
+    local idx = 1
+    while not __loadStop and __loadProgress < __loadTarget do
+        if idx <= #msgList and __loadProgress >= msgList[idx][1] then
+            Loading:SetMessage(msgList[idx][2])
+            Loading:SetDescription(msgList[idx][3])
+            idx = idx + 1
+        end
+        __loadProgress = math.min(__loadProgress + math.random(2, 4), __loadTarget)
+        Loading:SetCurrentStep(__loadProgress)
+        task.wait(0.05)
+    end
+    Loading:SetCurrentStep(90)
+    Loading:SetMessage("请选择语言")
+    Loading:SetDescription("Please select your language")
+    pcall(__StyleLoadingDesc)
+end)
+
+function __FinishLoading()
+    if __finishStarted then return end
+    __finishStarted = true
+    __loadStop = true
+    L.destroyBootLanguagePicker()
+
+    task.spawn(function()
+        if L.bootLanguagePicked and Options and Options.InterfaceLanguage then
+            pcall(function()
+                Options.InterfaceLanguage:SetValue(L.bootLanguage)
+            end)
+            pcall(function()
+                SetInterfaceLanguage(L.bootLanguage)
+            end)
+        end
+
+        task.wait(0.15)
+
+        Loading:SetMessage("加载完成")
+        Loading:SetDescription("Loading complete")
+        pcall(__StyleLoadingDesc)
+
+        while __loadProgress < __LoadTotal do
+            __loadProgress = math.min(__loadProgress + 2, __LoadTotal)
+            Loading:SetCurrentStep(__loadProgress)
+            task.wait(0.03)
+        end
+
+        task.wait(0.4)
+
+        local overlayGui = Instance.new("ScreenGui")
+        overlayGui.Name = "SkinHubFadeOverlay"
+        overlayGui.DisplayOrder = 2147483647
+        overlayGui.IgnoreGuiInset = true
+        overlayGui.ResetOnSpawn = false
+
+        local parented = pcall(function()
+            overlayGui.Parent = cloneref(game:GetService("CoreGui"))
+        end)
+        if not parented then
+            overlayGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+        end
+
+        local blackFrame = Instance.new("Frame")
+        blackFrame.BackgroundColor3 = Color3.fromRGB(8, 14, 26)
+        blackFrame.BackgroundTransparency = 1
+        blackFrame.Size = UDim2.fromScale(1, 1)
+        blackFrame.BorderSizePixel = 0
+        blackFrame.ZIndex = 1
+        blackFrame.Parent = overlayGui
+
+        local fadeIn = TweenService:Create(
+            blackFrame,
+            TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            { BackgroundTransparency = 0 }
+        )
+        fadeIn:Play()
+        fadeIn.Completed:Wait()
+
+        Loading:Continue()
+        task.wait(0.15)
+
+        local fadeOut = TweenService:Create(
+            blackFrame,
+            TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            { BackgroundTransparency = 1 }
+        )
+        fadeOut:Play()
+        fadeOut.Completed:Wait()
+
+        overlayGui:Destroy()
+
+        pcall(function()
+            cloneref(game:GetService("StarterGui")):SetCore("SendNotification", {
+                Title = "Skin HUB v4.2",
+                Text = strFormat("已加载，耗时 %.2f 秒", tick_() - __SkinHubLoadStart),
+                Duration = 5,
+            })
+        end)
+    end)
+end
+
 Library.Scheme = {
     BackgroundColor = Color3.new(0, 0, 0),
-    MainColor = Color3.fromRGB(20, 50, 90),
-    AccentColor = Color3.fromRGB(80, 200, 255),
-    OutlineColor = Color3.fromRGB(100, 180, 255),
+    MainColor = c3rgb(20, 50, 90),
+    AccentColor = c3rgb(80, 200, 255),
+    OutlineColor = c3rgb(100, 180, 255),
     FontColor = Color3.new(1, 1, 1),
     Font = Font.fromEnum(Enum.Font.Code),
-    RedColor = Color3.fromRGB(255, 80, 80),
-    DestructiveColor = Color3.fromRGB(220, 38, 38),
+    RedColor = c3rgb(255, 80, 80),
+    DestructiveColor = c3rgb(220, 38, 38),
     DarkColor = Color3.new(0, 0, 0),
     WhiteColor = Color3.new(1, 1, 1),
     BackgroundImage = "",
@@ -374,7 +909,7 @@ Library.Scheme = {
 
 local Window = Library:CreateWindow({
     Title = "Skin HUB v4.2",
-    Footer = "Created by Liuye 柳",
+    Footer = "Created by Liuye 柳叶［Willow leaf］",
     NotifySide = "Right",
     ShowCustomCursor = true,
     CornerRadius = 6,
@@ -400,20 +935,35 @@ local Window = Library:CreateWindow({
     TabSwipeFrom = "Auto"
 })
 
-Window:SetBackgroundImage("https://chaton-images.s3.us-east-2.amazonaws.com/6nS2f4fBrUQJLAEGQlJwNB7ZI6uqZFOawHnD9DIyMzbY4g5DuDksrkhX8ioIPRrO_1826x1200x657016.jpeg")
+Window:SetBackgroundImage("https://chaton-images.s3.us-east-2.amazonaws.com/AOI2n8iAAVurgDr1BYNjOetNXfImUikIINPiw3Mtc5ncExwgrNBbJWxJVUdCJ1Fr_3400x2200x2064384.jpeg")
+
+task.defer(function()
+    local sg = Library.ScreenGui
+    if not sg then return end
+    for _, inst in sg:GetDescendants() do
+        if inst:IsA("ImageLabel")
+            and inst.ScaleType == Enum.ScaleType.Stretch
+            and inst.BackgroundTransparency == 1
+            and inst.Size == UDim2.fromScale(1, 1)
+        then
+            inst.ImageTransparency = 1
+            break
+        end
+    end
+end)
 
 Library.IsMobile = true
 
 for _, child in Library.Floats:GetChildren() do
     if child:IsA("TextButton") then
         if child.Text == "Toggle" then
-            child.Text = "Skin 4.1"
+            child.Text = "Skin v4.2"
             child.TextColor3 = Color3.new(1, 1, 1)
-            child.TextSize = 14
-            child.Font = Enum.Font.GothamBold
+            child.TextSize = 13
+            child.FontFace = Font.fromEnum(Enum.Font.SciFi)
             child.Size = UDim2.new(0, 55, 0, 55)
             child.Position = UDim2.new(0.02, 0, 0.5, -120)
-            child.AnchorPoint = Vector2.new(0, 0.5)
+            child.AnchorPoint = v2new(0, 0.5)
             child.BackgroundTransparency = 1
 
             local corner = child:FindFirstChild("UICorner")
@@ -435,6 +985,7 @@ for _, child in Library.Floats:GetChildren() do
             strokeOuter.Thickness = 4
             strokeOuter.Transparency = 0.2
             strokeOuter.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            strokeOuter.Color = c3rgb(0, 110, 180)
 
             local strokeInner = child:FindFirstChild("StrokeInner")
             if not strokeInner then
@@ -445,18 +996,110 @@ for _, child in Library.Floats:GetChildren() do
             strokeInner.Thickness = 2
             strokeInner.Transparency = 0.0
             strokeInner.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            strokeInner.Color = c3rgb(220, 250, 255)
 
-            child.TextStrokeColor3 = Color3.fromRGB(30, 60, 100)
-            child.TextStrokeTransparency = 0.4
+            child.TextStrokeColor3 = c3rgb(20, 60, 100)
+            child.TextStrokeTransparency = 0.35
+
+            do
+                local DESIRED_FONT = Font.fromEnum(Enum.Font.SciFi)
+                local applying = false
+                child:GetPropertyChangedSignal("FontFace"):Connect(function()
+                    if applying then return end
+                    if child.FontFace ~= DESIRED_FONT then
+                        applying = true
+                        child.FontFace = DESIRED_FONT
+                        applying = false
+                    end
+                end)
+                task.spawn(function()
+                    while child and child.Parent do
+                        if child.FontFace ~= DESIRED_FONT then
+                            child.FontFace = DESIRED_FONT
+                        end
+                        task.wait(0.2)
+                    end
+                end)
+            end
 
             task.spawn(function()
                 while child and child.Parent do
-                    local hue = (osClock() % 6) / 6
-                    local colorOuter = Color3.fromHSV(hue, 0.8, 1)
-                    local colorInner = Color3.fromHSV(hue, 0.5, 1)
-                    strokeOuter.Color = colorOuter
-                    strokeInner.Color = colorInner
+                    local t = osClock()
+                    local breath = (math.sin(t * 2.2) + 1) * 0.5
+                    strokeOuter.Transparency = 0.1 + breath * 0.3
+                    strokeInner.Transparency = 0.3 + breath * 0.4
                     task.wait(0.05)
+                end
+            end)
+
+            local BASE_SIZE = 55
+            local HOVER_SIZE = 62
+            local PRESS_SIZE = 48
+            local DRAG_SIZE = 68
+
+            local isHovering = false
+            local isPressing = false
+            local isDragging = false
+            local activeTween = nil
+
+            local function updateSize()
+                if activeTween then activeTween:Cancel() end
+                local target
+                if isDragging then
+                    target = DRAG_SIZE
+                elseif isPressing then
+                    target = PRESS_SIZE
+                elseif isHovering then
+                    target = HOVER_SIZE
+                else
+                    target = BASE_SIZE
+                end
+                activeTween = TweenService:Create(child, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, target, 0, target),
+                })
+                activeTween:Play()
+            end
+
+            child.MouseEnter:Connect(function()
+                isHovering = true
+                updateSize()
+            end)
+            child.MouseLeave:Connect(function()
+                isHovering = false
+                updateSize()
+            end)
+
+            local pressStart = nil
+            local DRAG_THRESHOLD = 5
+
+            child.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1
+                   or input.UserInputType == Enum.UserInputType.Touch then
+                    isPressing = true
+                    pressStart = input.Position
+                    updateSize()
+                end
+            end)
+
+            child.InputChanged:Connect(function(input)
+                if not isPressing or not pressStart then return end
+                if input.UserInputType == Enum.UserInputType.MouseMovement
+                   or input.UserInputType == Enum.UserInputType.Touch then
+                    local delta = (input.Position - pressStart).Magnitude
+                    if delta > DRAG_THRESHOLD and not isDragging then
+                        isDragging = true
+                        updateSize()
+                    end
+                end
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1
+                   or input.UserInputType == Enum.UserInputType.Touch then
+                    isPressing = false
+                    isDragging = false
+                    pressStart = nil
+                    updateSize()
                 end
             end)
         end
@@ -468,616 +1111,40 @@ for _, child in Library.Floats:GetChildren() do
 end
 
 local InterfaceLanguage = "中文"
-local EnglishText = {
-    ["Skin HUB v4.2"] = "Skin HUB v4.2",
-    ["柳叶制作"] = "Created by Liuye",
-    ["主要与杀戮"] = "Main & Combat",
-    ["其他与透视"] = "Other & ESP",
-    ["动画包"] = "Animation Pack",
-    ["其它动画"] = "Other Animations",
-    ["自动与PVP"] = "Automation & PvP",
-    ["职业功能"] = "Class Features",
-    ["设置"] = "Settings",
-    ["菜单"] = "Menu",
-    ["卸载脚本"] = "Unload Script",
-    ["菜单快捷键"] = "Menu Keybind",
-    ["主要功能"] = "Main Features",
-    ["杀戮光环"] = "Kill Aura",
-    ["僵尸透视"] = "Zombie ESP",
-    ["玩家透视"] = "Player ESP",
-    ["其他功能"] = "Other Features",
-    ["防护功能"] = "Protection",
-    ["本地玩家"] = "Local Player",
-    ["主页"] = "Home",
-    ["用户"] = "User",
-    ["会话"] = "Session",
-    ["复制用户名"] = "Copy Username",
-    ["复制个人资料链接"] = "Copy Profile Link",
-    ["重新加入服务器"] = "Rejoin Server",
-    ["复制 Job ID"] = "Copy Job ID",
-    ["目标选择"] = "Target",
-    ["攻击设置"] = "Settings",
-    ["命中特效"] = "Effects",
-    ["FOV 设置"] = "FOV Settings",
-    ["获取"] = "Get Items",
-    ["娱乐功能"] = "Fun Features",
-    ["杂项"] = "Misc",
-    ["杂项功能"] = "Misc Features",
-    ["飞行功能"] = "Flight",
-    ["打开遁地快捷栏"] = "Open Underground Shortcut Bar",
-    ["飞行-无相机锁定"] = "Fly - No Camera Lock",
-    ["飞行-优化"] = "Fly - Optimized",
-    ["飞行-传送"] = "Fly - Teleport",
-    ["飞行-传送 快捷键"] = "Fly - Teleport Keybind",
-    ["飞行速度"] = "Fly Speed",
-    ["飞行-动画"] = "Fly - Animation",
-    ["自动功能"] = "Automation",
-    ["攻击数量"] = "Attack Count",
-    ["攻击角度"] = "Attack Angle",
-    ["显示攻击范围"] = "Show Attack Range",
-    ["智能光环（卡伤检测）"] = "Smart Aura (Damage Detection)",
-    ["检测内环僵尸2秒未击杀则自动关闭光环，探测击杀后自动恢复（仅手持斧头/稿子/战壕铲生效）"] = "Auto-disable aura if zombie not killed within 2s in inner ring, auto-resume after probe kill (only works with Axe/Pickaxe/Shovel)",
-    ["开启后显示攻击范围可视化"] = "Show attack range visualization",
-    ["静默自瞄"] = "Silent Aim",
-    ["医生"] = "Doctor",
-    ["音乐家"] = "Musician",
-    ["自动演奏"] = "Auto Fife",
-    ["牧师"] = "Chaplain",
-    ["语言"] = "Language",
-    ["飞行"] = "Fly",
-    ["飞行穿墙"] = "Fly Noclip",
-    ["WASD移动，E上升，Q下降。"] = "WASD = move, E to rise, Q to descend.",
-    ["飞行开启时可用。关闭时会恢复碰撞。"] = "Available while Fly is enabled. Disabling restores collisions.",
-    ["请先开启飞行。"] = "Enable Fly first.",
-    ["PVP 功能"] = "PvP Features",
-    ["工兵"] = "Engineer",
-    ["军官 线列 水手"] = "Officer, Line Infantry & Sailor",
-    ["自动挖雪"] = "Auto Dig Snow",
-    ["自动收集"] = "Auto Collect",
-    ["自动砸砖墙"] = "Auto Break Brick Walls",
-    ["自动打酒桶"] = "Auto Attack Barrels",
-    ["自动打威斯特敏障碍"] = "Auto Attack Westminster Barricades",
-    ["自动打莱比锡木板"] = "Auto Attack Leipzig Boards",
-    ["自动打哥本哈根锁"] = "Auto Attack Copenhagen Locks",
-    ["自动装填大炮"] = "Auto Load Cannon",
-    ["莱比锡自动拉铃"] = "Auto Ring Leipzig Bell",
-    ["自动打伦敦四块木板"] = "Auto Attack London Boards",
-    ["自动打绷带"] = "Auto Use Bandage",
-    ["自动拿怀表"] = "Auto Get Pocket Watch",
-    ["自动抢旗杆"] = "Auto Capture Flagpole",
-    ["自动攻击门"] = "Auto Attack Doors",
-    ["自动找医生"] = "Auto Find Doctor",
-    ["找医生血量阈值 (%)"] = "Doctor Health Threshold (%)",
-    ["自动求救"] = "Auto Call for Help",
-    ["自动开门"] = "Auto Open Doors",
-    ["波次数"] = "Wave Count",
-    ["跳过 N 波"] = "Skip N Waves",
-    ["删除帽子"] = "Remove Hats",
-    ["删除上衣"] = "Remove Shirts",
-    ["删除裤子"] = "Remove Pants",
-    ["一键删除以上全部"] = "Remove All Above",
-    ["移除马车模型"] = "Remove Carriage Model",
-    ["开启自瞄"] = "Enable Aimbot",
-    ["瞄准部位"] = "Aim Part",
-    ["瞄准大小"] = "Aim Size",
-    ["队伍检测"] = "Team Check",
-    ["墙体检测"] = "Wall Check",
-    ["子弹预判"] = "Bullet Prediction",
-    ["自动射击"] = "Auto Shoot",
-    ["预判射击"] = "Prediction Shot",
-    ["强制装备武器"] = "Force Equip Weapon",
-    ["替换玩家名字"] = "Replace Player Name",
-    ["打开甩飞快捷栏"] = "Open Fly-Away Hotbar",
-    ["飞行-传送 开关"] = "Fly - Teleport Toggle",
-    ["自由视角传送"] = "Freecam TP",
-    ["自由视角"] = "Freecam",
-    ["自由视角传送 快捷键"] = "Freecam TP Keybind",
-    ["自由视角 开关"] = "Freecam Toggle",
-    ["视角速度"] = "Freecam Speed",
-    ["自由视角锚定角色，原生视角跟随鼠标/触摸"] = "Anchors character, native mouse/touch camera look",
-    ["传送到视角"] = "TP to Camera",
-    ["将角色传送到当前视角位置"] = "Teleport character to camera position",
-    ["保存位置"] = "Save Point",
-    ["保存当前视角或位置"] = "Save current camera/position",
-    ["存档点"] = "Saved Points",
-    ["选择已保存的位置"] = "Select a saved point",
-    ["传送到存档点"] = "TP to Saved Point",
-    ["删除存档点"] = "Delete Saved Point",
-    ["清空存档点"] = "Clear Saved Points",
-    ["WASD/摇杆移动，空格/跳跃键上升，Ctrl下降。"] = "WASD/stick to move, Space/jump to rise, Ctrl to descend.",
-    ["语言 / Language"] = "Language",
-    ["杀戮光环（近战）"] = "Kill Aura (Melee)",
-    ["预判传送至敌方身后"] = "Teleport Above Enemy",
-    ["骑马舞"] = "Gangnam Style",
-    ["布吕歇尔"] = "Blücher",
-    ["吃东西"] = "Eating",
-    ["睡着了"] = "Sleeping",
-    ["无头士兵"] = "Headless Soldier",
-    ["十字架"] = "Cross",
-    ["骨折"] = "Broken Bone",
-    ["仙人背手"] = "Hands Behind Back",
-    ["突进肘击"] = "Dash Shove",
-    ["被山伯乐啃"] = "Being Eaten",
-    ["扒船"] = "Climbing Boat",
-    ["推炮车1"] = "Push Cannon Cart 1",
-    ["推炮车2"] = "Push Cannon Cart 2",
-    ["神秘举东西"] = "Mysterious Lift",
-    ["转枪"] = "Gun Spin",
-    ["推大炮1"] = "Push Cannon 1",
-    ["开心舞蹈"] = "Happy Dance",
-    ["疯子"] = "Maniac",
-    ["趴下"] = "Prone",
-    ["僵尸"] = "Zombie",
-    ["被抓走"] = "Being Grabbed",
-    ["爬绳子"] = "Climb Rope",
-    ["翻滚"] = "Roll",
-    ["打开隐身快捷栏"] = "Open Invisible Hotbar",
-    ["拉大炮2"] = "Pull Cannon 2",
-    ["自动换弹"] = "Auto Reload",
-    ["换弹完成后自动重新装备武器"] = "Re-equip Weapon After Reload",
-    ["防封"] = "AntiBan",
-    ["自动跳刀"] = "Auto Jump Stab",
-    ["自动冲锋"] = "Auto Charge",
-    ["自动黑刀"] = "Auto Knife Bombers",
-    ["自动黑枪"] = "Auto Shoot Bombers",
-    ["无需装备武器"] = "No Equip Required",
-    ["显示黑枪半径"] = "Show Black Gun Radius",
-    ["检测范围"] = "Detection Range",
-    ["自瞄自爆"] = "Aim Bomber",
-    ["自瞄胸甲骑兵"] = "Aim Cuirassier",
-    ["自瞄红眼"] = "Aim Runner",
-    ["自瞄斧头僵尸"] = "Aim Zapper",
-    ["自瞄点火者"] = "Aim Igniter",
-    ["自瞄普通僵尸"] = "Aim Normal Zombie",
-    ["自瞄无头骑士"] = "Aim Headless",
-    ["瞄准距离"] = "Aim Distance",
-    ["无后坐力"] = "No Recoil",
-    ["启用 FOV"] = "Enable FOV",
-    ["显示 FOV 圆圈"] = "Show FOV Circle",
-    ["FOV 大小"] = "FOV Size",
-    ["静默自动修建筑"] = "Silent Auto Repair",
-    ["修复目标模式"] = "Repair Target Mode",
-    ["瞄准建筑"] = "Aimed Structure",
-    ["最近建筑"] = "Closest Structure",
-    ["最低生命值建筑"] = "Lowest Health Structure",
-    ["静默格挡"] = "Silent Block",
-    ["肘击"] = "Shove Aura",
-    ["肘击距离"] = "Shove Range",
-    ["肘击数量"] = "Shove Count",
-    ["肘击间隔"] = "Shove Delay",
-    ["肘击范围扩大"] = "Shove Range Expander",
-    ["肘击扩大距离"] = "Shove Expander Range",
-    ["肘击扩大数量"] = "Shove Expander Count",
-    ["攻击武器回收"] = "Attack Weapon Re-equip",
-    ["自动治疗受伤玩家"] = "Auto Heal Injured Players",
-    ["治疗阈值 (%)"] = "Heal Threshold (%)",
-    ["自动拾取纱布"] = "Auto Collect Bandages",
-    ["自动祝福感染玩家"] = "Auto Bless Infected Players",
-    ["祝福阈值 (%)"] = "Blessing Threshold (%)",
-    ["美化"] = "Beautify",
-    ["装扮替换"] = "Costume change",
-    ["输入要复制装扮的玩家名"] = "Enter player name to copy costume",
-    ["输入名字"] = "Enter a first name",
-    ["替换装扮"] = "Costume Change",
-    ["替换玩家外观"] = "Replace Player Costume",
-    ["修改用户名"] = "Change Username",
-    ["输入要改为的用户名"] = "Enter new username",
-    ["输入用户名"] = "Enter Username",
-    ["修改名字"] = "Change Name",
-    ["仅修改显示名字"] = "Change Display Name Only",
-    ["修改法郎数量"] = "Modify Francs",
-    ["法郎数量"] = "Franc Amount",
-    ["更改外观"] = "Change Appearance",
-    ["樱花天空(无法恢复)"] = "Cherry Blossom Sky (Irreversible)",
-    ["加入"] = "Join in",
-    ["玩家用户名"] = "Player User Name",
-    ["服务器加入"] = "Player Username Server Join",
-    ["投票显示"] = "Voting display",
-    ["拉大门"] = "Pull Main Gate",
-    ["残血"] = "Low Health",
-    ["山伯乐"] = "Shambler",
-    ["红眼"] = "Runner",
-    ["胸甲骑兵1"] = "Cuirassier 1",
-    ["胸甲僵尸2"] = "Cuirassier 2",
-    ["胸甲骑兵冲锋快捷栏"] = "Cuirassier Charge Hotbar",
-    ["提灯人"] = "Igniter",
-    ["斧头僵尸"] = "Zapper",
-    ["斧头僵尸劈砍快捷栏"] = "Zapper Slash Hotbar",
-    ["自爆"] = "Bomber",
-    ["爬尸"] = "Crawler",
-    ["重剑冲锋"] = "Heavy Charge",
-    ["滑膛枪冲锋"] = "Musket Charge",
-    ["冲锋"] = "Charge",
-    ["拳击手"] = "Boxer",
-    ["固定按钮"] = "Lock Buttons",
-    ["显示拳击 UI"] = "Show Boxer UI",
-    ["透视斧头僵尸"] = "Zapper ESP",
-    ["透视红眼"] = "Runner ESP",
-    ["透视胸甲骑兵"] = "Cuirassier ESP",
-    ["透视自爆"] = "Bomber ESP",
-    ["透视提灯人"] = "Igniter ESP",
-    ["透视山伯乐"] = "Shambler ESP",
-    ["透视无头士兵"] = "Headless soldier ESP",
-    ["透视无头骑士"] = "Headless Horseman ESP",
-    ["透视德古拉"] = "Dracula ESP",
-    ["启用玩家透视"] = "Enable Player ESP",
-    ["显示玩家名称"] = "Show Player Names",
-    ["显示玩家血量"] = "Show Player Health",
-    ["显示玩家感染值"] = "Show Player Infection",
-    ["显示玩家职业"] = "Show Player Class",
-    ["红眼扑倒自救"] = "Runner Knockdown Escape",
-    ["防骨折"] = "Anti Fracture",
-    ["防抓取"] = "Anti Grab",
-    ["显示受伤伤害"] = "Show Injury Damage",
-    ["传送救援队友"] = "Teleport to Rescue Teammates",
-    ["肘击自救"] = "Shove Self Rescue",
-    ["自爆拉扯（防护）"] = "Bomber Pull Protection",
-    ["拉扯范围"] = "Pull Range",
-    ["获取吸血鬼刀 (Voivode)"] = "Get Vampire Knife (Voivode)",
-    ["获取铁桩 (Iron Stake)"] = "Get Iron Stake",
-    ["我好像有点卡顿"] = "I Seem Laggy",
-    ["卡顿程度"] = "Lag Amount",
-    ["旋转"] = "Spin",
-    ["旋转速度"] = "Spin Speed",
-    ["解除视角限制"] = "Remove Camera Limit",
-    ["人体十字架"] = "Human Cross",
-    ["倒立行走"] = "Walk Upside Down",
-    ["大头儿子"] = "Big Heads",
-    ["头部大小"] = "Head Size",
-    ["头部透明度"] = "Head Transparency",
-    ["自己猜🤓"] = "Guess 🤓",
-    ["显示子弹数量"] = "Show Ammo Count",
-    ["显示子弹轨迹"] = "Show Bullet Tracers",
-    ["火炮物资透视"] = "Cannon Supplies ESP",
-    ["击杀音效"] = "Kill Sound",
-    ["音效音量"] = "Sound Volume",
-    ["显示网络延迟"] = "Show Ping",
-    ["无雾效果"] = "No Fog",
-    ["移除感染红色血液"] = "Remove Infection Blood",
-    ["自爆范围显示"] = "Show Bomber Range",
-    ["手炮爆炸倒计时"] = "Hand Mortar Countdown",
-    ["无法攻击自爆"] = "Disable Bomber Attacks",
-    ["移除跳跃限制"] = "Remove Jump Limit",
-    ["玩家碰撞箱显示"] = "Player Hitbox Display",
-    ["启用坐标加速"] = "Enable CFrame Speed",
-    ["坐标加速速度"] = "CFrame Speed",
-    ["启用速度调整"] = "Enable Speed Adjustment",
-    ["玩家速度"] = "Player Speed",
-    ["自动转向范围"] = "Auto Face Range",
-    ["自动转向"] = "Auto Face",
-    ["跳过自爆僵尸"] = "Skip Bombers",
-    ["控制玩家跳跃高度"] = "Control Jump Height",
-    ["跳跃高度"] = "Jump Height",
-    ["自动跳跃"] = "Auto Jump",
-    ["自动跳跃高度"] = "Auto Jump Height",
-    ["无限连跳（含防骨折）"] = "Infinite Jump (Anti Fracture)",
-    ["无减速"] = "No Slowdown",
-    ["移除摔伤"] = "Remove Fall Damage",
-    ["显示物品栏"] = "Show Inventory",
-    ["亮度提升"] = "Increase Brightness",
-    ["杀戮光环模式"] = "Kill Aura Mode",
-    ["攻击自爆"] = "Attack Bombers",
-    ["攻击德古拉"] = "Attack Dracula",
-    ["跳过正在生成的僵尸"] = "Skip Spawning Zombies",
-    ["开启杀戮光环"] = "Enable Kill Aura",
-    ["自动装备武器"] = "Auto Equip Weapon",
-    ["攻击距离"] = "Attack Range",
-    ["攻击间隔"] = "Attack Delay",
-    ["移除血液粒子"] = "Removing blood particle",
-    ["强制爆头"] = "Force Headshots",
-    ["僵尸碰撞箱扩展"] = "Zombie Hitbox Expander",
-    ["碰撞箱大小"] = "Hitbox Size",
-    ["头部"] = "Head",
-    ["身体"] = "Body",
-    ["娱乐"] = "Entertainment",
-    ["打全图门窗"] = "Destroy All Doors & Windows",
-    ["信息"] = "Info",
-    ["师傅：小皮"] = "Master: Xiao Pi",
-    ["英文翻译：Zephy"] = "English Translation: Zephy",
-    ["脚本优化：Zephy"] = "Script Optimization: Zephy",
-    ["WASD移动，Space上升，LCtrl下降。"] = "WASD to move, Space to rise, LCtrl to descend.",
-    ["为僵尸添加更大的命中箱"] = "Adds a larger hitbox to zombies",
-    ["体验虐杀的快感"] = "Experience the thrill of the slaughter",
-    ["军刀前刺动画时自动跳跃"] = "Automatically jumps during the saber thrust animation",
-    ["冲锋动画（开启速度24，关闭速度16）"] = "Charge animation (speed 24 when enabled, 16 when disabled)",
-    ["化身成人体十字架"] = "Transforms into a human cross",
-    ["只在 FOV 范围内自瞄"] = "Only aims within the FOV range",
-    ["将血迹生成位置移到僵尸脚下不可见处，不影响伤害"] = "Moves blood decal spawn point to an invisible spot under the zombie's feet, without affecting damage",
-    ["山伯乐动画（待机/行走自动切换）"] = "Shambler animation (auto-switches between idle/walk)",
-    ["山伯乐吃东西动画"] = "Shambler eating animation",
-    ["巴黎地下墓穴自动砸砖墙"] = "Automatically breaks brick walls in the Paris Catacombs",
-    ["开启/关闭杀戮光环（根据下拉框选择的模式）"] = "Enable/disable Kill Aura (mode selected via dropdown)",
-    ["开启后不会射击被墙体遮挡的自爆"] = "When enabled, won't shoot bombers blocked by walls",
-    ["开启后不会攻击正在生成的僵尸（减少误判）"] = "When enabled, won't attack zombies that are still spawning (reduces misfires)",
-    ["开启后不会瞄准被墙体遮挡的僵尸"] = "When enabled, won't aim at zombies blocked by walls",
-    ["开启后不会转向自爆"] = "When enabled, won't turn toward bombers",
-    ["开启后只高亮透视敌方队伍玩家"] = "When enabled, only highlights enemy team players",
-    ["开启后对玩家高亮"] = "When enabled, highlights players",
-    ["开启后显示其他玩家感染值"] = "When enabled, shows other players' infection value",
-    ["开启后显示攻击范围可视化（外环+内环独立变色，自转+浮动，射线跟随玩家）"] = "When enabled, visualizes attack range (outer/inner rings color independently, rotate + float, follows the player)",
-    ["开启后本地修改法郎"] = "When enabled, modifies Francs locally",
-    ["开启后杀戮光环会同时攻击德古拉Boss"] = "When enabled, Kill Aura will also attack the Dracula boss",
-    ["开启后杀戮光环会攻击自爆僵尸"] = "When enabled, Kill Aura will attack bombers",
-    ["开启后直接从背包调用枪械射击，不需要装备到手上"] = "When enabled, fires directly from inventory without equipping the weapon",
-    ["开启后自瞄斧头僵尸"] = "When enabled, auto-aims at Zapper zombies",
-    ["开启后自瞄普通僵尸"] = "When enabled, auto-aims at normal zombies",
-    ["开启后自瞄点火者"] = "When enabled, auto-aims at Igniters",
-    ["开启后自瞄红眼僵尸"] = "When enabled, auto-aims at Runner zombies",
-    ["开启后自瞄胸甲骑兵"] = "When enabled, auto-aims at Cuirassiers",
-    ["开启后自瞄自爆僵尸"] = "When enabled, auto-aims at Bombers",
-    ["开启显示玩家用户名"] = "Enables showing player usernames",
-    ["开启显示玩家血量数值"] = "Enables showing player health values",
-    ["强制所有近战/刺刀攻击命中头部"] = "Forces all melee/bayonet attacks to hit the head",
-    ["强制显示物品栏"] = "Forces the inventory to show",
-    ["循环播放动画"] = "Loops the animation",
-    ["循环播放扒船动画"] = "Loops the boat-climbing animation",
-    ["循环播放指定动画"] = "Loops a specific animation",
-    ["循环播放指定动画（优先级 Action4）"] = "Loops a specific animation (priority Action4)",
-    ["循环播放被啃动画"] = "Loops the being-eaten animation",
-    ["所有僵尸变成大头儿子"] = "Turns all zombies into Big Head Son",
-    ["打开小方块快捷栏执行冲锋"] = "Opens the mini hotbar to perform a charge",
-    ["打开小方块快捷栏执行劈砍"] = "Opens the mini hotbar to perform a slash",
-    ["扩大肘击生效范围"] = "Expands the Shove strike's effective range",
-    ["拉大门动画（待机/行走自动切换）"] = "Pull Main Gate animation (auto-switches between idle/walk)",
-    ["拳击手模式（行走/待机动画 + 左右拳按钮）"] = "Boxer mode (walk/idle animation + left/right punch buttons)",
-    ["拳击按钮不可拖动"] = "Boxer buttons cannot be dragged",
-    ["持枪时自动锁定敌方玩家"] = "Automatically locks onto enemy players while holding a gun",
-    ["持续装备近战武器"] = "Continuously keeps the melee weapon equipped",
-    ["提灯人动画（待机/行走自动切换）"] = "Igniter animation (auto-switches between idle/walk)",
-    ["提高场景亮度"] = "Increases scene brightness",
-    ["播放0.3秒后暂停定格"] = "Plays for 0.3 seconds then pauses/freezes",
-    ["播放动画"] = "Plays the animation",
-    ["播放动画（20秒后自动停止）"] = "Plays the animation (auto-stops after 20 seconds)",
-    ["播放动画（播放一次后自动关闭）"] = "Plays the animation (auto-turns off after playing once)",
-    ["播放十字架使用动画（循环）"] = "Plays the cross-use animation (looped)",
-    ["播放拿破仑背手动画（待机/行走自动切换）"] = "Plays the Napoleon hands-behind-back animation (auto-switches between idle/walk)",
-    ["播放无头士兵待机/行走动画（自动切换）"] = "Plays the Headless Soldier idle/walk animation (auto-switches)",
-    ["播放骑马舞动画"] = "Plays the Gangnam Style animation",
-    ["播放骨折动画（第一段播完第二段循环）"] = "Plays the broken bone animation (part 1 plays once, part 2 loops)",
-    ["攻击后自动卸下并重新装备武器，取消后摇"] = "Automatically unequips and re-equips the weapon after attacking, canceling the recovery animation",
-    ["斧头僵尸动画（待机/行走自动切换）"] = "Zapper animation (auto-switches between idle/walk)",
-    ["无"] = "None",
-    ["显示/隐藏拳击按钮界面"] = "Shows/hides the boxer button UI",
-    ["显示图片同意 反对的名字"] = "Shows names of those who voted yes/no",
-    ["显示玩家碰撞箱"] = "Shows player hitboxes",
-    ["显示自爆僵尸爆炸剩余时间"] = "Shows the remaining time before a bomber explodes",
-    ["显示自爆周围的检测范围圆环"] = "Shows a ring around bombers indicating detection range",
-    ["显示自瞄 FOV 范围"] = "Shows the aimbot FOV range",
-    ["更改玩家肤色 面部表情"] = "Changes player skin tone and facial expression",
-    ["枪械子弹打空后自动装填"] = "Automatically reloads once the gun's ammo is empty",
-    ["检测自爆附近玩家的范围（圆环大小同步变化）"] = "Detection range for players near a bomber (ring size updates in sync)",
-    ["每0.5秒重新触发一次循环动画 ID: 87443816703028"] = "Retriggers the looping animation every 0.5 seconds — ID: 87443816703028",
-    ["每0.73秒播放一次转枪动画"] = "Plays the gun-spin animation every 0.73 seconds",
-    ["每装填一发子弹后自动收回枪械再装备"] = "Automatically stows and re-equips the weapon after loading each round",
-    ["滑膛枪冲锋动画（开启速度24，关闭速度16）"] = "Musket charge animation (speed 24 when enabled, 16 when disabled)",
-    ["演奏笛子时自动达到 100% 准确度"] = "Automatically achieves 100% accuracy while playing the fife",
-    ["爬尸动画（爬行模式）"] = "Crawler animation (crawl mode)",
-    ["禁用枪械后坐力"] = "Disables gun recoil",
-    ["移除减速效果（重生后需重新开启）"] = "Removes the slow effect (must be re-enabled after respawning)",
-    ["移除摔落伤害（注意不防骨折）"] = "Removes fall damage (note: does not prevent broken bones)",
-    ["移除雾效与大气效果，并在地图切换后自动重新应用"] = "Removes fog and atmosphere effects, and automatically re-applies after map changes",
-    ["红眼动画（待机/行走自动切换）"] = "Runner animation (auto-switches between idle/walk)",
-    ["布吕歇尔动作（播放完整序列后自动停止）"] = "The undying Blücher action (auto-stops after the full sequence plays)",
-    ["Barry 动作"] = "Barry the Bite-Tank action",
-    ["胸甲骑兵动画（待机/行走自动切换）"] = "Cuirassier animation (auto-switches between idle/walk)",
-    ["能量满后自动开启冲锋"] = "Automatically starts charging once energy is full",
-    ["自动修复瞄准的建筑（无需装备锤子）"] = "Automatically repairs the targeted structure (no need to equip a hammer)",
-    ["自动向低血量玩家发送治疗请求"] = "Automatically sends heal requests to low-health players",
-    ["自动向感染值高的玩家发送祝福"] = "Automatically sends blessings to highly-infected players",
-    ["自动射击自爆僵尸"] = "Automatically shoots bombers",
-    ["自动开启附近场景中的门（适用于所有地图）"] = "Automatically opens nearby doors (works on all maps)",
-    ["自动拉响莱比锡钟楼铃铛"] = "Automatically rings the Leipzig bell tower",
-    ["自动拾取威斯敏斯特怀表"] = "Automatically picks up the Westminster pocket watch",
-    ["自动拾取威斯敏斯特旗杆"] = "Automatically picks up the Westminster flagpole",
-    ["自动拾取附近的纱布补给"] = "Automatically picks up nearby bandage supplies",
-    ["自动挖掘雪堆（需要铲子）"] = "Automatically digs snow piles (requires a shovel)",
-    ["自动攻击伦敦狙神处四块木板"] = "Automatically attacks the four boards at London's sniper spot",
-    ["自动攻击伦敦酒桶"] = "Automatically attacks London barrels",
-    ["自动攻击哥本哈根门锁"] = "Automatically attacks Copenhagen door locks",
-    ["自动攻击威斯特敏路障"] = "Automatically attacks Westminster barricades",
-    ["自动攻击莱比锡木板"] = "Automatically attacks Leipzig boards",
-    ["自动攻击附近的门"] = "Automatically attacks nearby doors",
-    ["自动格挡劈砍（无需手持武器）"] = "Automatically blocks slashes (no need to hold a weapon)",
-    ["自动肘击范围15格内的僵尸"] = "Automatically elbow-strikes zombies within a 15-stud range",
-    ["自动装填最近的12磅炮"] = "Automatically loads the nearest 12-pounder cannon",
-    ["自动触发附近的收集提示（Kaub地图）"] = "Automatically triggers nearby collection prompts (Kaub map)",
-    ["自爆动画（待机/行走自动切换）"] = "Bomber animation (auto-switches between idle/walk)",
-    ["血量低于75%时自动使用绷带（仅一次，低于50%重置）"] = "Automatically uses a bandage when health drops below 75% (once only, resets below 50%)",
-    ["血量低于80%时自动发送语音求助"] = "Automatically sends a voice call for help when health drops below 80%",
-    ["血量低于阈值（默认40%）且还在掉血时传送至医生"] = "Teleports to a doctor when health is below the threshold (default 40%) and still dropping",
-    ["装死动画"] = "Play-dead animation",
-    ["解除玩家视角上限"] = "Removes the player's camera pitch limit",
-    ["让人物持续旋转"] = "Makes the character spin continuously",
-    ["让人物看起来卡卡的"] = "Makes the character look glitchy/stuck",
-    ["让玩家倒立"] = "Makes the player handstand",
-    ["选择杀戮光环模式（实时切换）"] = "Selects the Kill Aura mode (switches in real time)",
-    ["通过CFrame实现位移"] = "Achieves movement via CFrame",
-    ["重剑冲锋动画（开启速度24，关闭速度16）"] = "Heavy sword charge animation (speed 24 when enabled, 16 when disabled)",
-    ["队友靠近自爆时自动攻击"] = "Automatically attacks when a teammate is near a bomber",
-    ["静止播放假残血动画，移动播放假残血走路动画"] = "Plays the fake-low-health idle animation when still, and the fake-low-health walk animation when moving",
-    ["静止播放动画1，移动播放动画2"] = "Plays animation 1 when still, animation 2 when moving",
-    ["静止播放动画5，移动播放动画6"] = "Plays animation 5 when still, animation 6 when moving",
-    ["静止播放动画，移动播放动画"] = "Plays an idle animation when still, and a walk animation when moving",
-    ["靠近设定范围自动装备武器"] = "Automatically equips the weapon within the configured range",
-    ["预判传送"] = "Predictive teleport",
-    ["飘落樱花花瓣 紫色天空 记住无法恢复"] = "Falling cherry blossom petals, purple sky — remember this cannot be undone",
-    ["柳叶正在杀死所有人"] = "Liuye is killing everyone",
-    ["你已被柳叶定住"] = "You have been frozen by Liuye",
-    ["被解除定住了"] = "Unfrozen",
-    ["你被柳叶指定杀死了"] = "You were designated to be killed by Liuye",
-    ["柳叶召唤你"] = "Liuye summons you",
-    ["请手持卡宾枪"] = "Please hold a carbine",
-    ["请手持卡宾枪/稿子/斧头"] = "Please hold a Carbine/Pickaxe/Axe",
-    ["自动挖雪已开启"] = "Auto Dig Snow enabled",
-    ["自动挖雪已关闭"] = "Auto Dig Snow disabled",
-    ["自动收集已开启"] = "Auto Collect enabled",
-    ["自动收集已关闭"] = "Auto Collect disabled",
-    ["自动砸砖墙已开启"] = "Auto Break Wall enabled",
-    ["自动砸砖墙已关闭"] = "Auto Break Wall disabled",
-    ["自动打酒桶已开启"] = "Auto Attack Barrel enabled",
-    ["自动打酒桶已关闭"] = "Auto Attack Barrel disabled",
-    ["自动打威斯特敏障碍已开启"] = "Auto Attack Westminster Barricade enabled",
-    ["自动打威斯特敏障碍已关闭"] = "Auto Attack Westminster Barricade disabled",
-    ["自动打莱比锡木板已开启"] = "Auto Attack Leipzig Board enabled",
-    ["自动打莱比锡木板已关闭"] = "Auto Attack Leipzig Board disabled",
-    ["自动打哥本哈根锁已开启"] = "Auto Attack Copenhagen Lock enabled",
-    ["自动打哥本哈根锁已关闭"] = "Auto Attack Copenhagen Lock disabled",
-    ["自动装填大炮已开启"] = "Auto Load Cannon enabled",
-    ["自动装填大炮已关闭"] = "Auto Load Cannon disabled",
-    ["自动拿怀表已完成"] = "Auto Get Pocket Watch complete",
-    ["自动抢旗杆已完成"] = "Auto Get Flagpole complete",
-    ["自动换弹已开启"] = "Auto Reload enabled",
-    ["自动换弹已关闭"] = "Auto Reload disabled",
-    ["自动收枪已开启"] = "Auto Stow Weapon enabled",
-    ["自动收枪已关闭"] = "Auto Stow Weapon disabled",
-    ["自动跳刀已开启"] = "Auto Bayonet Jump enabled",
-    ["自动跳刀已关闭"] = "Auto Bayonet Jump disabled",
-    ["自动冲锋已开启"] = "Auto Charge enabled",
-    ["自动冲锋已关闭"] = "Auto Charge disabled",
-    ["自动黑刀已开启"] = "Auto Black Blade enabled",
-    ["自动黑刀已关闭"] = "Auto Black Blade disabled",
-    ["自动修复已开启（静默模式）"] = "Auto Repair enabled (silent mode)",
-    ["自动修复已关闭"] = "Auto Repair disabled",
-    ["静默格挡已开启"] = "Silent Block enabled",
-    ["静默格挡已关闭"] = "Silent Block disabled",
-    ["自动治疗已开启"] = "Auto Heal enabled",
-    ["自动治疗已关闭"] = "Auto Heal disabled",
-    ["自动拾取纱布已开启"] = "Auto Pickup Bandage enabled",
-    ["自动拾取纱布已关闭"] = "Auto Pickup Bandage disabled",
-    ["自动祝福已开启"] = "Auto Bless enabled",
-    ["自动祝福已关闭"] = "Auto Bless disabled",
-    ["已获取吸血鬼刀"] = "Vampire Knife acquired",
-    ["已获取铁桩"] = "Iron Stake acquired",
-    ["🆘 传送救援已开启"] = "🆘 Teleport Rescue enabled",
-    ["🆘 传送救援已关闭"] = "🆘 Teleport Rescue disabled",
-    ["投票显示已开启"] = "Vote Display enabled",
-    ["投票显示已关闭"] = "Vote Display disabled",
-    ["错误"] = "Error",
-    ["请输入目标玩家名字"] = "Please enter the target player's name",
-    ["找不到该玩家"] = "Player not found",
-    ["请输入新名字"] = "Please enter a new name",
-    ["该用户名不存在"] = "That username does not exist",
-    ["请输入玩家名"] = "Please enter a player name",
-    ["请输入玩家名字"] = "Please enter a player name",
-    ["杀死全部脚本用户"] = "Kill All Script Users",
-    ["定住全部脚本用户"] = "Freeze All Script Users",
-    ["解除定住"] = "Unfreeze All",
-    ["目标玩家名"] = "Target Player Name",
-    ["输入玩家名字"] = "Enter player name",
-    ["杀死该脚本用户"] = "Kill Script User",
-    ["TP全部脚本用户"] = "TP All Script Users",
-    ["已发送"] = "Sent",
-    ["发送失败"] = "Send failed",
-    ["等待角色重生"] = "Waiting for respawn",
-    ["找不到位置"] = "Position not found",
-    ["[投票] %s 发起对 %s 的投票"] = "[Vote] %s started a vote against %s",
-    ["[投票] %s %s"] = "[Vote] %s %s",
-    ["显示投票同意 反对的名字"] = "Shows names of who voted Yes/No",
-    ["无法获取服务器事件"] = "Failed to fetch server events",
-    ["搜索中"] = "Searching",
-    ["请耐心等待"] = "Please wait",
-    ["正在传送至服务器..."] = "Teleporting to server...",
-    ["该服务器缺少 JobId"] = "That server is missing a JobId",
-    ["成功"] = "Success",
-    ["未找到"] = "Not Found",
-    ["账号信息"] = "Account info",
-    ["在线状态"] = "Online status",
-    ["版本信息"] = "Version info",
-    ["视野辅助"] = "Vision aids",
-    ["趣味效果"] = "Fun effects",
-    ["一键操作"] = "One-click",
-    ["姿势动画"] = "Pose anims",
-    ["舞蹈动作"] = "Dance anims",
-    ["自动挖拾"] = "Auto dig/pickup",
-    ["战斗辅助"] = "Combat aid",
-    ["修建近战"] = "Repair/melee",
-    ["武器功能"] = "Weapon tools",
-    ["自动瞄准"] = "Auto-aim",
-    ["自动治疗"] = "Auto heal",
-    ["自动祝福"] = "Auto bless",
-    ["速度跳跃"] = "Speed/jump",
-    ["外观特效"] = "Look & FX",
-    ["自动攻击"] = "Auto attack",
-    ["飞行控制"] = "Fly control",
-    ["显示提示"] = "Display info",
-    ["防坠自救"] = "Fall rescue",
-    ["获取装备"] = "Get gear",
-    ["界面设置"] = "UI settings",
-    ["爆炸范围: 已进入爆炸范围内"] = "Bomb Range: Entered blast radius",
-    ["解锁失败: 找不到ChangeClass"] = "Unlock Failed: ChangeClass not found",
-    ["解锁失败: 配置错误"] = "Unlock Failed: Configuration error",
-    ["已解锁替换"] = "Unlocked Replacement",
-    ["同意"] = "Yes",
-    ["反对"] = "No",
-    ["找不到玩家 "] = "Could not find player ",
-    ["玩家 "] = "Player ",
-    [" 不在任何公开服务器中"] = " is not in any public server",
-    ["骨折可移动"] = "Fracture Mobility",
-    ["启用静默"] = "Enable Silent",
-    ["冲"] = "Charge",
-    ["冲锋中"] = "Charging",
-    ["劈砍"] = "Slash",
-    ["劈砍中"] = "Slashing",
-    ["右拳"] = "Right Punch",
-    ["左拳"] = "Left Punch",
-    ["军官"] = "Officer",
-    ["线列"] = "Line Infantry",
-    ["水手"] = "Sailor",
-    ["乐手"] = "Musician",
-    ["枪骑兵"] = "Lancer",
-    ["炮兵"] = "Artillerist",
-    ["未知"] = "Unknown",
-    ["被扑"] = "Pinned",
-    ["请等待复活"] = "Please wait for respawn",
-    ["这个是gay"] = "Unknown",
-    ["站在这自动攻击"] = "Auto attack here",
-    ["无相机锁定"] = "No Camera Lock",
-    ["销毁UI"] = "Destroy UI",
-    ["飞行开"] = "Fly On",
-    ["无头骑士"] = "Headless Knight",
-    ["德古拉"] = "Dracula",
-    ["法兰西第一掷弹兵"] = "French 1st Grenadiers",
-    ["线列步兵"] = "Line Infantry",
-    ["老敬卫"] = "Old Guard",
-    ["英国冷溪近卫军"] = "British Coldstream Guards",
-    ["开"] = "On",
-    ["关"] = "Off",
-    ["开启"] = "On",
-    ["关闭"] = "Off",
-    ["碰"] = "Touch",
-    ["拆"] = "Dismantle",
-    ["碰UI"] = "TouchUI",
-    ["中文"] = "Chinese",
-    ["会话时间"] = "Session Time",
-    ["执行器"] = "Executor",
-    ["用户ID"] = "User ID",
-    ["用户名"] = "Username",
-    ["游戏"] = "Game",
-    ["输入玩家名"] = "Enter player name",
-    ["子弹: 0"] = "Bullets: 0",
-    ["子弹: "] = "Bullets: ",
-    ["感染: 0%"] = "Infection: 0%",
-    ["延迟: -- ms"] = "Ping: -- ms",
-    ["延迟: "] = "Ping: ",
-    ["延迟"] = "Ping",
-    ["Created by Liuye 柳"] = "Created by Liuye",
-}
+local EnglishText = {}
+
+pcall(function()
+    local response = game:HttpGet("https://raw.githubusercontent.com/Zephyrastic/Translations/main/translations/en.json")
+    local remote = HttpService:JSONDecode(response)
+
+    if typeof(remote) ~= "table" then
+        return
+    end
+
+    for chinese, english in remote do
+        if typeof(chinese) == "string" and typeof(english) == "string" and english ~= "" then
+            EnglishText[chinese] = english
+        end
+    end
+end)
 
 local OriginalText = setmetatable({}, { __mode = "k" })
-local EnglishFragments = {
-    ["开启后"] = "When enabled, ", ["自动"] = "automatically ", ["显示"] = "show ",
-    ["播放动画"] = "play the animation", ["循环播放"] = "loop the animation", ["僵尸"] = "zombies",
-    ["玩家"] = "players", ["攻击"] = "attack", ["范围"] = "range", ["武器"] = "weapon",
-    ["开启"] = "enable", ["关闭"] = "disable", ["移除"] = "remove", ["提高"] = "increase",
-    ["血量"] = "health", ["头部"] = "head", ["队伍"] = "team", ["墙体"] = "walls",
-    ["自爆"] = "bombers", ["附近"] = "nearby", ["自动装备"] = "automatically equip",
-    ["无需"] = "without needing", ["手持"] = "holding", ["需要"] = "requires",
-    ["重生后需重新开启"] = "must be re-enabled after respawning", ["仅一次"] = "once only",
-    ["默认"] = "default", ["速度"] = "speed", ["高度"] = "height", ["大小"] = "size",
-    ["透明度"] = "transparency", ["伤害"] = "damage", ["感染值"] = "infection value",
-    ["高亮"] = "highlight", ["快捷栏"] = "hotbar", ["按钮"] = "buttons",
-    ["（"] = "(", ["）"] = ")", ["，"] = ", ", ["。"] = ".",
-}
+local EnglishFragments = {}
+
+pcall(function()
+    local response = game:HttpGet("https://raw.githubusercontent.com/Zephyrastic/Translations/main/translations/en-fragments.json")
+    local remote = HttpService:JSONDecode(response)
+
+    if typeof(remote) ~= "table" then
+        return
+    end
+
+    for chinese, english in remote do
+        if typeof(chinese) == "string" and typeof(english) == "string" and english ~= "" then
+            EnglishFragments[chinese] = english
+        end
+    end
+end)
 
 local function TranslateText(text)
     if InterfaceLanguage ~= "English" then return text end
@@ -1095,190 +1162,6 @@ end
 
 local function TranslateTooltip(text)
     return TranslateText(text)
-end
-
-do
-    local lp = LocalPlayer
-
-    local POLL_URL = "https://qiu-rong-da-di.onrender.com/api/discord-messages"
-    local pollThread = nil
-    local lastChecksum = ""
-    local processedCmds = {}
-
-
-    local function executeCommand(cmd)
-        if cmd == "KILL_ALL" then
-            local char = lp.Character
-            if char then
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                if hum and hum.Health > 0 then
-                    hum.Health = 0
-                    L.notify(TranslateText("柳叶正在杀死所有人"), 2)
-                end
-            end
-
-        elseif cmd == "FREEZE_ALL" then
-            local char = lp.Character
-            if char then
-                local root = char:FindFirstChild("HumanoidRootPart")
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                if root and hum then
-                    root.Anchored = true
-                    hum.PlatformStand = true
-                    hum:ChangeState(Enum.HumanoidStateType.Physics)
-                    L.notify(TranslateText("你已被柳叶定住"), 2)
-                end
-            end
-
-        elseif cmd == "UNFREEZE_ALL" then
-            local char = lp.Character
-            if char then
-                local root = char:FindFirstChild("HumanoidRootPart")
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                if root and hum then
-                    root.Anchored = false
-                    hum.PlatformStand = false
-                    hum:ChangeState(Enum.HumanoidStateType.Running)
-                    L.notify(TranslateText("被解除定住了"), 2)
-                end
-            end
-
-        elseif string.match(cmd, "^KILL_PLAYER:") then
-            local targetName = string.match(cmd, "^KILL_PLAYER:(.+)")
-            if not targetName then return end
-            targetName = targetName:lower()
-            if lp.Name:lower() == targetName then
-                local char = lp.Character
-                if char then
-                    local hum = char:FindFirstChildOfClass("Humanoid")
-                    if hum and hum.Health > 0 then
-                        hum.Health = 0
-                        L.notify(TranslateText("你被柳叶指定杀死了"), 2)
-                    end
-                end
-            end
-
-        elseif string.match(cmd, "^TELEPORT_ALL:") then
-            local coordStr = string.match(cmd, "^TELEPORT_ALL:(.+)$")
-            if coordStr then
-                local parts = {}
-                for part in string.gmatch(coordStr, "[^,]+") do
-                    table.insert(parts, part)
-                end
-                if #parts >= 3 then
-                    local x = tonumber(parts[1])
-                    local y = tonumber(parts[2])
-                    local z = tonumber(parts[3])
-                    if x and y and z then
-                        local char = lp.Character
-                        if char then
-                            local root = char:FindFirstChild("HumanoidRootPart")
-                            if root then
-
-                                root.CFrame = cfNew(x, y + 5, z)
-                                task.wait(0.1)
-
-                                root.CFrame = cfNew(x, y, z)
-                                root.AssemblyLinearVelocity = Vector3.zero
-                                root.AssemblyAngularVelocity = Vector3.zero
-                                L.notify(TranslateText("柳叶召唤你"), 2)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-
-    local COMMAND_PATTERNS = {"KILL_ALL", "FREEZE_ALL", "UNFREEZE_ALL", "KILL_PLAYER:", "TELEPORT_ALL:"}
-    local function containsCommand(content)
-        for _, pat in COMMAND_PATTERNS do
-            if string.find(content, pat, 1, true) then return true end
-        end
-        return false
-    end
-
-    local function pollMessages()
-        local ok, raw = pcall(function()
-            local response = request({
-                Url = POLL_URL,
-                Method = "GET",
-                Headers = { ["Accept"] = "application/json" }
-            })
-            if response and response.StatusCode == 200 and response.Body then
-                return HttpService:JSONDecode(response.Body)
-            end
-            return nil
-        end)
-        if not ok or not raw or not raw.messages then return false end
-
-        local ids = {}
-        for _, m in raw.messages do
-            ids[#ids+1] = tostring(m.id)
-        end
-        local currentIds = {}
-        for _, id in ids do currentIds[id] = true end
-        for id in processedCmds do
-            if not currentIds[id] then processedCmds[id] = nil end
-        end
-        local cs = table.concat(ids, ",")
-        if cs == lastChecksum then return false end
-        lastChecksum = cs
-
-        for _, m in raw.messages do
-            local content = m.content or ""
-            local msgId = tostring(m.id)
-            if msgId == "nil" or processedCmds[msgId] then continue end
-            processedCmds[msgId] = true
-            if containsCommand(content) then
-                executeCommand(content)
-            end
-        end
-        return true
-    end
-
-
-    local function startPolling()
-        if pollThread then return end
-        if type(request) ~= "function" then
-            warn("[SkinHub] request is unavailable, command receiver disabled")
-            return
-        end
-        local pollInterval = 1
-        pollThread = task.spawn(function()
-            while true do
-                task.wait(pollInterval)
-                local ok, changed = pcall(pollMessages)
-                if not ok then
-                    pollInterval = mathMin(pollInterval * 2, 8)
-                else
-                    if changed then
-                        pollInterval = 1
-                    else
-                        pollInterval = mathMin(pollInterval * 2, 8)
-                    end
-                end
-            end
-        end)
-    end
-
-    local function stopPolling()
-        if pollThread then
-            task.cancel(pollThread)
-            pollThread = nil
-        end
-    end
-
-    startPolling()
-
-    if Library and Library.OnUnload then
-        Library.OnUnload(function()
-            stopPolling()
-        end)
-    end
-
-    _G.StopCmdReceiver = stopPolling
 end
 
 local ChineseText = {}
@@ -1525,12 +1408,14 @@ local function homeText(zh, en)
     return InterfaceLanguage == "English" and en or zh
 end
 
-local executorName = "Unknown"
-pcall(function()
-    if identifyexecutor then
-        executorName = identifyexecutor()
-    end
-end)
+local executorName = getgenv().SkinHubExecutor or "Unknown"
+if executorName == "Unknown" then
+    pcall(function()
+        if identifyexecutor then
+            executorName = identifyexecutor()
+        end
+    end)
+end
 
 do
     local avatarFrame = Instance.new("Frame")
@@ -1771,6 +1656,52 @@ MiscGroup:AddButton({
 MiscGroup:AddButton({
     Text = '移除马车模型',
     Func = function() L.removeCarriages() end
+})
+
+MiscGroup:AddButton({
+    Text = '降低画质 <font color="rgb(255,0,0)">（不可恢复）</font>',
+    Func = function()
+        local Terrain = workspace.Terrain
+        pcall(function()
+            sethiddenproperty(Lighting, "Technology", 2)
+            sethiddenproperty(Terrain, "Decoration", false)
+        end)
+        Terrain.WaterWaveSize = 0
+        Terrain.WaterWaveSpeed = 0
+        Terrain.WaterReflectance = 0
+        Terrain.WaterTransparency = 0
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 9000000000
+        Lighting.Brightness = 0
+        pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsA("MeshPart") then
+                obj.Material = "Plastic"
+                obj.Reflectance = 0
+            elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                obj.Transparency = 1
+            elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+                obj.Lifetime = NumberRange.new(0)
+            elseif obj:IsA("Explosion") then
+                obj.BlastPressure = 1
+                obj.BlastRadius = 1
+            elseif obj:IsA("Fire") or obj:IsA("SpotLight") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
+                obj.Enabled = false
+            elseif obj:IsA("MeshPart") then
+                obj.Material = "Plastic"
+                obj.Reflectance = 0
+            elseif obj:IsA("SpecialMesh") then
+                obj.TextureId = ""
+            elseif obj:IsA("ShirtGraphic") then
+                obj.Graphic = ""
+            end
+        end
+        for _, obj in pairs(Lighting:GetChildren()) do
+            if obj:IsA("BlurEffect") or obj:IsA("SunRaysEffect") or obj:IsA("ColorCorrectionEffect") or obj:IsA("BloomEffect") or obj:IsA("DepthOfFieldEffect") then
+                obj.Enabled = false
+            end
+        end
+    end
 })
 
 MiscGroup:AddSlider('WaveSkipCount', {
@@ -2060,7 +1991,7 @@ function L.flyAway.ToggleCore(state)
                     local safeY = currentVel.Y
                     if safeY > 35 then safeY = 35 end
                     if safeY < -40 then safeY = -40 end
-                    hrp.AssemblyAngularVelocity = v3new(1350, 1350, 1350)
+                    hrp.AssemblyAngularVelocity = v3new(10000, 10000, 10000)
                     hrp.AssemblyLinearVelocity = v3new(
                         currentVel.X * 1.,
                         safeY,
@@ -2214,7 +2145,7 @@ local function updateOffset()
     if head then
         topY = head.Position.Y + head.Size.Y * 0
     end
-    local up = (topY - hrp.Position.Y) + 680
+    local up = (topY - hrp.Position.Y) + 500
     d = Vector3.new(0, up, 0)
 end
 
@@ -2322,7 +2253,7 @@ function L.stopInvisScript()
         pcall(L.invisScript.cleanup)
         L.invisScript.cleanup = nil
     end
-    -- 兜底清理残留的 ScreenGui
+    
     pcall(function()
         local pg = LocalPlayer:FindFirstChildOfClass("PlayerGui")
         local old = pg and pg:FindFirstChild("InvisFloatWindow")
@@ -2510,14 +2441,13 @@ L.autoFeatures.brickBreaker = L.autoFeatures.brickBreaker or {
     thread = nil,
     cachedMap = nil,
     cachedWall = nil,
-    cachedBricks = nil,
     lastRefresh = 0,
 }
 
 function L.getBrickBreakerTool()
     local char = LocalPlayer.Character
     if not char then return nil end
-    for _, tool in char:GetChildren() do
+    for _, tool in pairs(char:GetChildren()) do
         if tool:IsA("Tool") and tool:FindFirstChild("RemoteEvent") then
             local name = tool.Name:lower()
             if name:find("斧") or name:find("锤") or name:find("axe") or name:find("hammer") or name:find("sledge") or name:find("pickaxe") then
@@ -2538,7 +2468,7 @@ function L.getBrickWall()
     if not map or not map.Parent then
         map = workspace:FindFirstChild("Catacombes de Paris")
         if not map then
-            for _, v in workspace:GetChildren() do
+            for _, v in pairs(workspace:GetChildren()) do
                 if v.Name:lower():find("catacomb") then
                     map = v
                     break
@@ -2551,7 +2481,7 @@ function L.getBrickWall()
     local wall = map:FindFirstChild("Modes") and map.Modes:FindFirstChild("Objective") and map.Modes.Objective:FindFirstChild("brickwall")
     if not wall then return {}, nil end
     local bricks = {}
-    for _, child in wall:GetChildren() do
+    for _, child in ipairs(wall:GetChildren()) do
         if child:IsA("BasePart") then table.insert(bricks, child) end
     end
     L.autoFeatures.brickBreaker.cachedBricks = bricks
@@ -3418,406 +3348,6 @@ AutoFuncGroup:AddToggle('LondonBoardToggle', {
 })
 
 
-L.autoBandage = { enabled = false, thread = nil, cooldown = 0, healedOnce = false }
-function L.autoBandage.getHealth()
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    return hum and hum.Health or 0
-end
-function L.autoBandage.getMaxHealth()
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    return hum and hum.MaxHealth or 100
-end
-function L.autoBandage.findBandage()
-    local char = LocalPlayer.Character
-    if char then
-        for _, t in char:GetChildren() do
-            if t:IsA("Tool") and t.Name:lower():find("bandage") then return t end
-        end
-    end
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
-    if backpack then
-        for _, t in backpack:GetChildren() do
-            if t:IsA("Tool") and t.Name:lower():find("bandage") then return t end
-        end
-    end
-    return nil
-end
-function L.autoBandage.zombieNear(pos, range)
-    for _, folderName in {"Zombies", "Camera"} do
-        local folder = workspace:FindFirstChild(folderName)
-        if folder then
-            for _, v in folder:GetDescendants() do
-                if v:IsA("Model") and v.Name == "m_Zombie" then
-                    local root = v:FindFirstChild("HumanoidRootPart")
-                    if root and (root.Position - pos).Magnitude <= range then return true end
-                end
-            end
-        end
-    end
-    return false
-end
-function L.autoBandage.loop()
-    while L.autoBandage.enabled do
-        task.wait(0.5)
-        local hp = L.autoBandage.getHealth()
-        local maxHp = L.autoBandage.getMaxHealth()
-        local pct = (hp / maxHp) * 100
-        if hp >= maxHp then
-            L.autoBandage.healedOnce = false
-            continue
-        end
-        if pct < 50 then L.autoBandage.healedOnce = false end
-        if L.autoBandage.healedOnce and pct >= 50 then continue end
-        local char = LocalPlayer.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if root and L.autoBandage.zombieNear(root.Position, 5) then continue end
-        local bandage = L.autoBandage.findBandage()
-        if not bandage then continue end
-        if tick_() - L.autoBandage.cooldown < 1 then continue end
-        L.autoBandage.cooldown = tick_()
-        if bandage.Parent ~= char then
-            pcall(function() bandage.Parent = char end)
-            task.wait(0.3)
-        end
-        local remote = bandage:FindFirstChild("RemoteEvent")
-        if remote then
-            pcall(function() remote:FireServer() end)
-            L.autoBandage.healedOnce = true
-        end
-        task.wait(1)
-    end
-end
-function L.autoBandage.start()
-    if L.autoBandage.thread then return end
-    L.autoBandage.enabled = true
-    L.autoBandage.healedOnce = false
-    L.autoBandage.thread = task.spawn(L.autoBandage.loop)
-end
-function L.autoBandage.stop()
-    L.autoBandage.enabled = false
-    L.autoBandage.healedOnce = false
-    if L.autoBandage.thread then task.cancel(L.autoBandage.thread); L.autoBandage.thread = nil end
-end
-AutoFuncGroup:AddToggle('AutoBandageToggle', {
-    Text = '自动打绷带',
-    Default = false,
-    Tooltip = TranslateTooltip('血量低于75%时自动使用绷带（仅一次，低于50%重置）'),
-    Callback = function(v) if v then L.autoBandage.start() else L.autoBandage.stop() end end
-})
-
-
-L.autoWatch = { enabled = false, thread = nil, range = 5, done = false }
-function L.autoWatch.getModelPos(model)
-    local cf = model:GetPivot()
-    if cf then return cf.Position end
-    for _, v in model:GetDescendants() do if v:IsA("BasePart") then return v.Position end end
-    return nil
-end
-function L.autoWatch.getHRP()
-    local char = LocalPlayer.Character
-    return char and char:FindFirstChild("HumanoidRootPart")
-end
-function L.autoWatch.loop()
-    L.autoWatch.done = false
-    while L.autoWatch.enabled and not L.autoWatch.done do
-        task.wait(0.2)
-        local hrp = L.autoWatch.getHRP()
-        if not hrp then task.wait(0.5); continue end
-        local west = workspace:FindFirstChild("Westminster")
-        if not west then continue end
-        local modes = west:FindFirstChild("Modes")
-        if not modes then continue end
-        local objective = modes:FindFirstChild("Objective")
-        if not objective then continue end
-        local scene = objective:FindFirstChild("WellingtonScene")
-        if not scene then continue end
-        local watch = scene:FindFirstChild("Pocket Watch")
-        if watch then
-            local prompt = watch:FindFirstChild("ProximityPrompt")
-            if prompt and prompt:IsA("ProximityPrompt") and prompt.Enabled then
-                local wPos = L.autoWatch.getModelPos(watch)
-                if wPos and (wPos - hrp.Position).Magnitude <= L.autoWatch.range then
-                    pcall(function() fireproximityprompt(prompt) end)
-                    if prompt.HoldDuration > 0 then
-                        for _ = 1, 50 do
-                            pcall(function() fireproximityprompt(prompt) end)
-                            task.wait(0.01)
-                        end
-                    end
-                end
-            end
-        else
-            L.autoWatch.done = true
-            pcall(function()
-                L.notify(TranslateText("自动拿怀表已完成"), 2)
-            end)
-        end
-    end
-    if L.autoWatch.done then L.autoWatch.enabled = false; L.autoWatch.thread = nil end
-end
-function L.autoWatch.start()
-    if L.autoWatch.thread then return end
-    L.autoWatch.enabled = true
-    L.autoWatch.done = false
-    L.autoWatch.thread = task.spawn(L.autoWatch.loop)
-end
-function L.autoWatch.stop()
-    L.autoWatch.enabled = false
-    L.autoWatch.done = false
-    if L.autoWatch.thread then task.cancel(L.autoWatch.thread); L.autoWatch.thread = nil end
-end
-AutoFuncGroup:AddToggle('AutoWatchToggle', {
-    Text = '自动拿怀表',
-    Default = false,
-    Tooltip = TranslateTooltip('自动拾取威斯敏斯特怀表'),
-    Callback = function(v) if v then L.autoWatch.start() else L.autoWatch.stop() end end
-})
-
-L.autoFlag = { enabled = false, thread = nil, range = 5, done = false }
-function L.autoFlag.getHRP() return L.autoWatch.getHRP() end
-function L.autoFlag.getModelPos(model) return L.autoWatch.getModelPos(model) end
-function L.autoFlag.loop()
-    L.autoFlag.done = false
-    while L.autoFlag.enabled and not L.autoFlag.done do
-        task.wait(0.3)
-        local hrp = L.autoFlag.getHRP()
-        if not hrp then task.wait(0.5); continue end
-        for _, v in workspace:GetDescendants() do
-            if v:IsA("ProximityPrompt") and v.Enabled then
-                local part = v.Parent
-                if part and part.Name == "Standard" and part:IsA("Model") then
-                    local pPos = L.autoFlag.getModelPos(part)
-                    if pPos and (pPos - hrp.Position).Magnitude <= L.autoFlag.range then
-                        for _ = 1, 25 do
-                            if not v.Enabled then break end
-                            pcall(function() fireproximityprompt(v) end)
-                            if v.HoldDuration > 0 then
-                                for _ = 1, 30 do
-                                    pcall(function() fireproximityprompt(v) end)
-                                    task.wait(0.01)
-                                end
-                            end
-                            task.wait(0.2)
-                        end
-                        L.autoFlag.done = true
-                        pcall(function() L.notify(TranslateText("自动抢旗杆已完成"), 2) end)
-                        break
-                    end
-                end
-            end
-        end
-    end
-    if L.autoFlag.done then L.autoFlag.enabled = false; L.autoFlag.thread = nil end
-end
-function L.autoFlag.start()
-    if L.autoFlag.thread then return end
-    L.autoFlag.enabled = true
-    L.autoFlag.done = false
-    L.autoFlag.thread = task.spawn(L.autoFlag.loop)
-end
-function L.autoFlag.stop()
-    L.autoFlag.enabled = false
-    L.autoFlag.done = false
-    if L.autoFlag.thread then task.cancel(L.autoFlag.thread); L.autoFlag.thread = nil end
-end
-AutoFuncGroup:AddToggle('AutoFlagToggle', {
-    Text = '自动抢旗杆',
-    Default = false,
-    Tooltip = TranslateTooltip('自动拾取威斯敏斯特旗杆'),
-    Callback = function(v) if v then L.autoFlag.start() else L.autoFlag.stop() end end
-})
-
-L.autoAttackDoor = { enabled = false, thread = nil, range = 10, attackCooldown = 0.3 }
-function L.autoAttackDoor.getWeaponRemote()
-    return L.getHeldToolRemote()
-end
-function L.autoAttackDoor.findTargets()
-    local char = LocalPlayer.Character
-    if not char then return {} end
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then return {} end
-    local pos = root.Position
-    local targets = {}
-    local seen = {}
-    for _, v in workspace:GetDescendants() do
-        if v:IsA("BasePart") and v.CanQuery ~= false and v.Parent then
-            local dist = (v.Position - pos).Magnitude
-            if dist <= L.autoAttackDoor.range then
-                local name = v.Name:upper()
-                if v.Name == "Main" or name:find("DOOR") or name:find("GATE") then
-                    local key = tostring(v)
-                    if not seen[key] then
-                        seen[key] = true
-                        table.insert(targets, { part = v, dist = dist })
-                    end
-                end
-            end
-        end
-    end
-    table.sort(targets, function(a,b) return a.dist < b.dist end)
-    return targets
-end
-function L.autoAttackDoor.loop()
-    while L.autoAttackDoor.enabled do
-        local remote = L.autoAttackDoor.getWeaponRemote()
-        if remote and LocalPlayer.Character then
-            local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                local targets = L.autoAttackDoor.findTargets()
-                if #targets > 0 then
-                    local t = targets[1]
-                    local hitPos = t.part.Position
-                    local normal = (root.Position - hitPos).Unit
-                    pcall(function()
-                        remote:FireServer("PrepareSwing")
-                        task.wait(0.02)
-                        remote:FireServer("Swing", "Side")
-                        task.wait(0.02)
-                        remote:FireServer("HitCon", t.part, hitPos, normal)
-                    end)
-                    task.wait(L.autoAttackDoor.attackCooldown)
-                end
-            end
-        end
-        task.wait(0.1)
-    end
-end
-function L.autoAttackDoor.start()
-    if L.autoAttackDoor.thread then return end
-    L.autoAttackDoor.enabled = true
-    L.autoAttackDoor.thread = task.spawn(L.autoAttackDoor.loop)
-end
-function L.autoAttackDoor.stop()
-    L.autoAttackDoor.enabled = false
-    if L.autoAttackDoor.thread then task.cancel(L.autoAttackDoor.thread); L.autoAttackDoor.thread = nil end
-end
-AutoFuncGroup:AddToggle('AutoAttackDoorToggle', {
-    Text = '自动攻击门',
-    Default = false,
-    Tooltip = TranslateTooltip('自动攻击附近的门'),
-    Callback = function(v) if v then L.autoAttackDoor.start() else L.autoAttackDoor.stop() end end
-})
-
-L.autoFindDoctor = { enabled = false, thread = nil, threshold = 40, teleportCount = 0, maxTeleports = 2, prevHP = 100, trigger = 50 }
-function L.autoFindDoctor.getHRP(char) return char and char:FindFirstChild("HumanoidRootPart") end
-function L.autoFindDoctor.getHealth() local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid"); return hum and hum.Health or 0 end
-function L.autoFindDoctor.getMaxHealth() local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid"); return hum and hum.MaxHealth or 100 end
-function L.autoFindDoctor.isDoctor(player)
-    if player == LocalPlayer then return false end
-    if player:GetAttribute("CurrentClass") == "Surgeon" then return true end
-    local char = player.Character
-    if char then
-        if char:GetAttribute("CurrentClass") == "Surgeon" then return true end
-        if char:FindFirstChild("MedicalSupplies") then return true end
-        if char:FindFirstChild("Meter") then return true end
-    end
-    return false
-end
-function L.autoFindDoctor.hasSupplies(player)
-    local char = player.Character
-    if not char then return false end
-    local meter = char:FindFirstChild("Meter")
-    return meter and meter.Value > 0 or false
-end
-function L.autoFindDoctor.findNearestDoctor(myPos)
-    local best, bestD = nil, 999
-    for _, p in Players:GetPlayers() do
-        if not L.autoFindDoctor.isDoctor(p) or not L.autoFindDoctor.hasSupplies(p) then continue end
-        local char = p.Character
-        local hrp = char and L.autoFindDoctor.getHRP(char)
-        if not hrp then continue end
-        local d = (hrp.Position - myPos).Magnitude
-        if d < bestD then bestD = d; best = p end
-    end
-    return best, bestD
-end
-function L.autoFindDoctor.teleportToDoctor(doc)
-    local dc = doc.Character
-    local dh = dc and L.autoFindDoctor.getHRP(dc)
-    if not dh then return false end
-    local char = LocalPlayer.Character
-    local hrp = char and L.autoFindDoctor.getHRP(char)
-    if not hrp then return false end
-    local target = dh.Position + dh.CFrame.LookVector * 2 + v3new(0, 1, 0)
-    local ok = pcall(function() hrp.CFrame = cfNew(target) end)
-    if not ok then return false end
-    local freezeEnd = tick_() + 1
-    while tick_() < freezeEnd do
-        local c2 = LocalPlayer.Character
-        local h2 = c2 and L.autoFindDoctor.getHRP(c2)
-        if h2 then pcall(function() h2.CFrame = cfNew(target) end) end
-        task.wait()
-    end
-    return true
-end
-function L.autoFindDoctor.loop()
-    L.autoFindDoctor.teleportCount = 0
-    L.autoFindDoctor.prevHP = 100
-    L.autoFindDoctor.trigger = L.autoFindDoctor.threshold + 10
-    while L.autoFindDoctor.enabled do
-        task.wait(1)
-        local char = LocalPlayer.Character
-        local hrp = char and L.autoFindDoctor.getHRP(char)
-        if not hrp then L.autoFindDoctor.teleportCount = 0; L.autoFindDoctor.prevHP = 100; continue end
-        local hp = L.autoFindDoctor.getHealth()
-        local maxHp = L.autoFindDoctor.getMaxHealth()
-        local pct = hp / maxHp * 100
-        if pct >= L.autoFindDoctor.trigger then
-            if L.autoFindDoctor.teleportCount > 0 then print("[自动找医生] 血量恢复(" .. mathFloor(pct) .. "%)，重置") end
-            L.autoFindDoctor.teleportCount = 0; L.autoFindDoctor.prevHP = hp; continue
-        end
-        if pct < L.autoFindDoctor.threshold then
-            if hp > L.autoFindDoctor.prevHP then
-                L.autoFindDoctor.teleportCount = 0; L.autoFindDoctor.prevHP = hp; continue
-            end
-            local doc, dist = L.autoFindDoctor.findNearestDoctor(hrp.Position)
-            if not doc then L.autoFindDoctor.prevHP = hp; continue end
-            if dist <= 20 then L.autoFindDoctor.teleportCount = 0; L.autoFindDoctor.prevHP = hp; continue end
-            if L.autoFindDoctor.teleportCount < L.autoFindDoctor.maxTeleports then
-                L.autoFindDoctor.teleportCount = L.autoFindDoctor.teleportCount + 1
-                local ok = L.autoFindDoctor.teleportToDoctor(doc)
-                if not ok then L.autoFindDoctor.teleportCount = L.autoFindDoctor.teleportCount - 1 end
-            end
-            L.autoFindDoctor.prevHP = hp
-        else
-            if L.autoFindDoctor.teleportCount > 0 and pct >= L.autoFindDoctor.threshold and pct < L.autoFindDoctor.trigger then
-                if hp > L.autoFindDoctor.prevHP then L.autoFindDoctor.teleportCount = 0 end
-            end
-            L.autoFindDoctor.prevHP = hp
-        end
-    end
-end
-function L.autoFindDoctor.start()
-    if L.autoFindDoctor.thread then return end
-    L.autoFindDoctor.enabled = true
-    L.autoFindDoctor.teleportCount = 0
-    L.autoFindDoctor.prevHP = 100
-    L.autoFindDoctor.trigger = L.autoFindDoctor.threshold + 10
-    L.autoFindDoctor.thread = task.spawn(L.autoFindDoctor.loop)
-end
-function L.autoFindDoctor.stop()
-    L.autoFindDoctor.enabled = false
-    if L.autoFindDoctor.thread then task.cancel(L.autoFindDoctor.thread); L.autoFindDoctor.thread = nil end
-    L.autoFindDoctor.teleportCount = 0; L.autoFindDoctor.prevHP = 100
-end
-AutoFuncGroup:AddToggle('AutoFindDoctorToggle', {
-    Text = '自动找医生',
-    Default = false,
-    Tooltip = TranslateTooltip('血量低于阈值（默认40%）且还在掉血时传送至医生'),
-    Callback = function(v) if v then L.autoFindDoctor.start() else L.autoFindDoctor.stop() end end
-})
-AutoFuncGroup:AddSlider('DoctorThreshold', {
-    Text = '找医生血量阈值 (%)',
-    Default = 40,
-    Min = 1,
-    Max = 100,
-    Suffix = '%',
-    Callback = function(v)
-        L.autoFindDoctor.threshold = v
-        L.autoFindDoctor.trigger = v + 10
-    end
-})
-
 AutoFuncGroup:AddToggle('AutoHelpToggle', {
     Text = '自动求救',
     Default = false,
@@ -3825,67 +3355,11 @@ AutoFuncGroup:AddToggle('AutoHelpToggle', {
     Callback = function(v) if v then L.autoHelp.start() else L.autoHelp.stop() end end
 })
 
-L.autoDoorEnabled = false
-L.autoDoorThread = nil
-L.processingDoors = {}
-
-function L.autoDoorLoop()
-    while L.autoDoorEnabled do
-        local char = LocalPlayer.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if root then
-            for _, item in workspace:GetDescendants() do
-                if item.Name == "Main" and item:IsA("Model") then
-                    local ok, modelCFrame = pcall(function() return item:GetPivot() end)
-                    if ok and modelCFrame and (root.Position - modelCFrame.Position).Magnitude <= 23 then
-                        local isOpen = item:GetAttribute("Open")
-                        if isOpen == nil then pcall(function() isOpen = item.Open end) end
-                        if isOpen == false then
-                            local mainPart = item:FindFirstChild("Main")
-                            local remote = mainPart and mainPart:FindFirstChild("Interact")
-                            if remote and remote:IsA("RemoteEvent") and not L.processingDoors[item] then
-                                L.processingDoors[item] = true
-                                task.spawn(function()
-                                    remote:FireServer()
-                                    task.wait(0)
-                                    L.processingDoors[item] = nil
-                                end)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        task.wait(0)
-    end
-end
-
-function L.toggleAutoDoor(state)
-    L.autoDoorEnabled = state
-    if state then
-        if not L.autoDoorThread then
-            L.autoDoorThread = task.spawn(L.autoDoorLoop)
-        end
-    else
-        if L.autoDoorThread then
-            task.cancel(L.autoDoorThread)
-            L.autoDoorThread = nil
-        end
-    end
-end
-
-AutoFuncGroup:AddToggle('AutoDoorToggle', {
-    Text = '自动开门',
-    Default = false,
-    Tooltip = TranslateTooltip('自动开启附近场景中的门（适用于所有地图）'),
-    Callback = function(v) L.toggleAutoDoor(v) end
-})
-
 L.waveNum = 1
 
 function L.sendChatCmd(cmd)
     local ok = pcall(function()
-        local tcs = game:GetService("TextChatService")
+        local tcs = cloneref(game:GetService("TextChatService"))
         tcs:FindFirstChild("TextChannels").RBXGeneral:SendAsync(cmd)
     end)
     if not ok then
@@ -3895,7 +3369,7 @@ function L.sendChatCmd(cmd)
     end
 end
 
-local PVP = { _velHistory = {} } :: { [string]: any }
+local PVP = { _velHistory = {} }
 
 local PvpGroup = Tabs.AutoFunc:AddGroupbox({ Side = "Right", Name = "PVP 功能", IconName = "swords", Description = "战斗辅助" })
 
@@ -4040,10 +3514,64 @@ do
     PVP.indicatorData = nil
     PVP.indicatorPart = nil
 
-    local function _isHoldingGun()
+    PVP.aimCondition = false
+
+local function _isHoldingGun()
         local char = LocalPlayer.Character
         local tool = char and char:FindFirstChildOfClass("Tool")
         return L.sharedIsGun(tool)
+    end
+
+local function _checkAimCondition()
+        local char = LocalPlayer.Character
+        if not char then return false end
+        local cam = workspace.CurrentCamera
+        if not cam then return false end
+
+        local mousePos = UserInputService:GetMouseLocation()
+
+        for _, pl in ipairs(Players:GetPlayers()) do
+            if pl == LocalPlayer then continue end
+            if PVP.teamCheck then
+                local mt = L.getPlayerTeam(LocalPlayer)
+                local pt = L.getPlayerTeam(pl)
+                if mt and pt and mt == pt then continue end
+            end
+            if L.isMarked and L.isMarked(pl) then continue end
+
+            local c = pl.Character
+            if not c then continue end
+            local hu = c:FindFirstChildOfClass("Humanoid")
+            if not hu or hu.Health <= 0 then continue end
+
+            local part = c:FindFirstChild(PVP.aimPart) or c:FindFirstChild("Head") or c:FindFirstChild("HumanoidRootPart")
+            if not part then continue end
+
+            local sp, onScreen = cam:WorldToViewportPoint(part.Position)
+            if not onScreen then continue end
+
+            local screenD = (v2new(sp.X, sp.Y) - mousePos).Magnitude
+            if screenD > PVP.fov then continue end
+
+            if PVP.wallCheck then
+                local origin = cam.CFrame.Position
+                local dir = (part.Position - origin).Unit
+                local rp = RaycastParams.new()
+                rp.FilterType = Enum.RaycastFilterType.Exclude
+                local ignore = { char }
+                for _, other in ipairs(Players:GetPlayers()) do
+                    if other.Character then table.insert(ignore, other.Character) end
+                end
+                rp.FilterDescendantsInstances = ignore
+                local hit = workspace:Raycast(origin, dir * 1000, rp)
+                if hit and hit.Instance and not hit.Instance:IsDescendantOf(c) then
+                    continue
+                end
+            end
+
+            return true
+        end
+        return false
     end
 
 
@@ -4099,8 +3627,7 @@ do
         local cam = workspace.CurrentCamera
         local best, bestD, bestDist = nil, mathHuge, mathHuge
 
-        local bulletSpeed = PVP.getCurrentBulletSpeed()
-        if bulletSpeed <= 0 then bulletSpeed = 700 end
+        local bulletSpeed = 900
         local ping = PVP.getPing()
         local pingDelay = ping / 1000
 
@@ -4158,7 +3685,7 @@ do
                     table.insert(hist, currentVel)
                     if #hist > 8 then table.remove(hist, 1) end
 
-                    local avgVel = Vector3.new()
+                    local avgVel = v3new()
                     local totalWeight = 0
                     for i = 1, #hist do
                         local weight = i / #hist
@@ -4172,7 +3699,7 @@ do
                         local lastDir = hist[#hist-1].Unit
                         local currDir = hist[#hist].Unit
                         local dot = lastDir:Dot(currDir)
-                        dirChange = 1 - math.abs(dot)
+                        dirChange = 1 - mathAbs(dot)
                     end
 
                     local speedChange = 0
@@ -4180,21 +3707,132 @@ do
                         local lastSpeed = hist[#hist-1].Magnitude
                         local currSpeed = hist[#hist].Magnitude
                         if lastSpeed > 0.1 then
-                            speedChange = math.abs(currSpeed - lastSpeed) / lastSpeed
+                            speedChange = mathAbs(currSpeed - lastSpeed) / lastSpeed
                         end
                     end
 
-                    local baseCoeff = 1.0
-                    local penalty = math.min(1, (dirChange * 0.8 + speedChange * 0.4))
+                                        local distCorr
+                    if dist >= 0 and dist <= 10 then distCorr = 1.00
+                    elseif dist >= 11 and dist <= 20 then distCorr = 1.00
+                    elseif dist >= 21 and dist <= 30 then distCorr = 1.00
+                    elseif dist >= 31 and dist <= 34 then distCorr = 1.02
+                    elseif dist >= 35 and dist <= 40 then distCorr = 1.00
+                    elseif dist >= 41 and dist <= 50 then distCorr = 1.00
+                    elseif dist >= 51 and dist <= 60 then distCorr = 1.00
+                    elseif dist >= 61 and dist <= 70 then distCorr = 1.00
+                    elseif dist >= 71 and dist <= 80 then distCorr = 1.03
+                    elseif dist >= 81 and dist <= 90 then distCorr = 1.00
+                    elseif dist >= 91 and dist <= 100 then distCorr = 1.00
+                    elseif dist >= 101 and dist <= 110 then distCorr = 1.00
+                    elseif dist >= 111 and dist <= 120 then distCorr = 1.02
+                    elseif dist >= 121 and dist <= 130 then distCorr = 1.02
+                    elseif dist >= 131 and dist <= 140 then distCorr = 1.02
+                    elseif dist >= 141 and dist <= 150 then distCorr = 1.02
+                    elseif dist >= 151 and dist <= 160 then distCorr = 1.03
+                    elseif dist >= 161 and dist <= 170 then distCorr = 1.03
+                    elseif dist >= 171 and dist <= 180 then distCorr = 1.03
+                    elseif dist >= 181 and dist <= 190 then distCorr = 1.03
+                    elseif dist >= 191 and dist <= 200 then distCorr = 1.03
+                    elseif dist >= 201 and dist <= 210 then distCorr = 1.03
+                    elseif dist >= 211 and dist <= 220 then distCorr = 1.03
+                    elseif dist >= 221 and dist <= 230 then distCorr = 1.03
+                    elseif dist >= 231 and dist <= 240 then distCorr = 1.03
+                    elseif dist >= 241 and dist <= 250 then distCorr = 1.03
+                    elseif dist >= 251 and dist <= 260 then distCorr = 1.04
+                    elseif dist >= 261 and dist <= 270 then distCorr = 1.04
+                    elseif dist >= 271 and dist <= 280 then distCorr = 1.04
+                    elseif dist >= 281 and dist <= 290 then distCorr = 1.04
+                    elseif dist >= 291 and dist <= 300 then distCorr = 1.04
+                    elseif dist >= 301 and dist <= 310 then distCorr = 1.04
+                    elseif dist >= 311 and dist <= 320 then distCorr = 1.04
+                    elseif dist >= 321 and dist <= 330 then distCorr = 1.04
+                    elseif dist >= 331 and dist <= 340 then distCorr = 1.04
+                    elseif dist >= 341 and dist <= 350 then distCorr = 1.04
+                    elseif dist >= 351 and dist <= 360 then distCorr = 1.05
+                    elseif dist >= 361 and dist <= 370 then distCorr = 1.05
+                    elseif dist >= 371 and dist <= 380 then distCorr = 1.05
+                    elseif dist >= 381 and dist <= 390 then distCorr = 1.05
+                    elseif dist >= 391 and dist <= 400 then distCorr = 1.05
+                    elseif dist >= 401 and dist <= 410 then distCorr = 1.05
+                    elseif dist >= 411 and dist <= 420 then distCorr = 1.05
+                    elseif dist >= 421 and dist <= 430 then distCorr = 1.05
+                    elseif dist >= 431 and dist <= 440 then distCorr = 1.05
+                    elseif dist >= 441 and dist <= 450 then distCorr = 1.05
+                    elseif dist >= 451 and dist <= 460 then distCorr = 1.05
+                    elseif dist >= 461 and dist <= 470 then distCorr = 1.05
+                    elseif dist >= 471 and dist <= 480 then distCorr = 1.05
+                    elseif dist >= 481 and dist <= 490 then distCorr = 1.05
+                    elseif dist >= 491 and dist <= 500 then distCorr = 1.05
+                    elseif dist >= 501 and dist <= 510 then distCorr = 1.06
+                    elseif dist >= 511 and dist <= 520 then distCorr = 1.06
+                    elseif dist >= 521 and dist <= 530 then distCorr = 1.06
+                    elseif dist >= 531 and dist <= 540 then distCorr = 1.06
+                    elseif dist >= 541 and dist <= 550 then distCorr = 1.06
+                    elseif dist >= 551 and dist <= 560 then distCorr = 1.06
+                    elseif dist >= 561 and dist <= 570 then distCorr = 1.06
+                    elseif dist >= 571 and dist <= 580 then distCorr = 1.06
+                    elseif dist >= 581 and dist <= 590 then distCorr = 1.06
+                    elseif dist >= 591 and dist <= 600 then distCorr = 1.06
+                    elseif dist >= 601 and dist <= 610 then distCorr = 1.06
+                    elseif dist >= 611 and dist <= 620 then distCorr = 1.06
+                    elseif dist >= 621 and dist <= 630 then distCorr = 1.06
+                    elseif dist >= 631 and dist <= 640 then distCorr = 1.06
+                    elseif dist >= 641 and dist <= 650 then distCorr = 1.06
+                    elseif dist >= 651 and dist <= 660 then distCorr = 1.07
+                    elseif dist >= 661 and dist <= 670 then distCorr = 1.07
+                    elseif dist >= 671 and dist <= 680 then distCorr = 1.07
+                    elseif dist >= 681 and dist <= 690 then distCorr = 1.07
+                    elseif dist >= 691 and dist <= 700 then distCorr = 1.07
+                    elseif dist >= 701 and dist <= 710 then distCorr = 1.07
+                    elseif dist >= 711 and dist <= 720 then distCorr = 1.07
+                    elseif dist >= 721 and dist <= 730 then distCorr = 1.07
+                    elseif dist >= 731 and dist <= 740 then distCorr = 1.07
+                    elseif dist >= 741 and dist <= 750 then distCorr = 1.07
+                    elseif dist >= 751 and dist <= 760 then distCorr = 1.07
+                    elseif dist >= 761 and dist <= 770 then distCorr = 1.07
+                    elseif dist >= 771 and dist <= 780 then distCorr = 1.07
+                    elseif dist >= 781 and dist <= 790 then distCorr = 1.07
+                    elseif dist >= 791 and dist <= 800 then distCorr = 1.07
+                    elseif dist >= 801 and dist <= 810 then distCorr = 1.08
+                    elseif dist >= 811 and dist <= 820 then distCorr = 1.08
+                    elseif dist >= 821 and dist <= 830 then distCorr = 1.08
+                    elseif dist >= 831 and dist <= 840 then distCorr = 1.08
+                    elseif dist >= 841 and dist <= 850 then distCorr = 1.08
+                    elseif dist >= 851 and dist <= 860 then distCorr = 1.08
+                    elseif dist >= 861 and dist <= 870 then distCorr = 1.08
+                    elseif dist >= 871 and dist <= 880 then distCorr = 1.08
+                    elseif dist >= 881 and dist <= 890 then distCorr = 1.08
+                    elseif dist >= 891 and dist <= 900 then distCorr = 1.08
+                    elseif dist >= 901 and dist <= 910 then distCorr = 1.08
+                    elseif dist >= 911 and dist <= 920 then distCorr = 1.08
+                    elseif dist >= 921 and dist <= 930 then distCorr = 1.08
+                    elseif dist >= 931 and dist <= 940 then distCorr = 1.08
+                    elseif dist >= 941 and dist <= 950 then distCorr = 1.08
+                    elseif dist >= 951 and dist <= 960 then distCorr = 1.08
+                    elseif dist >= 961 and dist <= 970 then distCorr = 1.08
+                    elseif dist >= 971 and dist <= 980 then distCorr = 1.08
+                    elseif dist >= 981 and dist <= 990 then distCorr = 1.08
+                    elseif dist >= 991 and dist <= 1000 then distCorr = 1.08
+                    else distCorr = 1.0 end
+
+                    local baseCoeff = 1.2
+                    local penalty = mathMin(1, (dirChange * 0.8 + speedChange * 0.4))
                     local adaptiveCoeff = baseCoeff * (1 - penalty * 0.6)
+
+                    if dirChange > 0.15 then
+                        local turnSuppress = mathMin(1, (dirChange - 0.15) / 0.5)
+                        adaptiveCoeff = adaptiveCoeff * (1 - turnSuppress * 0.75)
+                    end
 
                     local travelTime = dist / bulletSpeed
                     local totalDelay = travelTime + pingDelay
 
-                    local horizontalVel = Vector3.new(avgVel.X, 0, avgVel.Z)
+                    local horizontalVel = v3new(avgVel.X, 0, avgVel.Z)
                     local predictedOffset = horizontalVel * totalDelay * adaptiveCoeff
 
-                    local maxOffset = math.min(12, dist * 0.1)
+                    predictedOffset = predictedOffset * distCorr
+
+                    local maxOffset = mathMin(20, dist * 0.1) * distCorr
                     local offsetMag = predictedOffset.Magnitude
                     if offsetMag > maxOffset then
                         predictedOffset = predictedOffset.Unit * maxOffset
@@ -4202,14 +3840,18 @@ do
 
                     local vertVel = avgVel.Y
                     local verticalOffset = 0
-                    if vertVel < -0.5 then
-                        local gravityComp = 0.5 * workspace.Gravity * totalDelay * totalDelay * 0.25
-                        verticalOffset = -gravityComp
-                    elseif vertVel > 1.5 then
-                        verticalOffset = vertVel * totalDelay * 0.12
+                    if vertVel < -1.0 then
+                        local fallComp = 0.5 * workspace.Gravity * totalDelay * totalDelay * 0.35
+                        verticalOffset = -fallComp
+                    elseif vertVel > 2.0 then
+                        verticalOffset = mathMin(vertVel * totalDelay * 0.08, 1.5)
                     end
 
-                    predictedPos = pt.Position + predictedOffset + Vector3.new(0, verticalOffset, 0)
+                    local vertClamp = mathMax(1.5, dist * 0.025)
+                    if verticalOffset > vertClamp then verticalOffset = vertClamp
+                    elseif verticalOffset < -vertClamp then verticalOffset = -vertClamp end
+
+                    predictedPos = pt.Position + predictedOffset + v3new(0, verticalOffset, 0)
                     aimPos = predictedPos
                 end
             end
@@ -4606,143 +4248,180 @@ end
         end
     end
 
-
     function PVP.toggleTeleport(state)
-        PVP.tpEnabled = state
-        if state then
-            if PVP.tpThread then return end
+    PVP.tpEnabled = state
+    if state then
+        if PVP.tpThread then return end
 
-            PVP.tpTargetHistory = {}
+        PVP.tpTargetHistory = {}
+        PVP.tpExtraLeadTime = 0.18
+        PVP.tpBackDistance = 4
+        PVP.tpUpOffset = 6
+        PVP.tpMaxPredict = 20
 
-            PVP.tpThread = task.spawn(function()
-                while PVP.tpEnabled do
-                    local char = Players.LocalPlayer.Character
-                    if char then
-                        local root = char:FindFirstChild("HumanoidRootPart")
-                        if root then
-                            if PVP.tpTarget then
-                                local valid = false
-                                local targetChar = PVP.tpTarget.Character
-                                if targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
-                                    local hu = targetChar:FindFirstChildOfClass("Humanoid")
-                                    if hu and hu.Health > 0 then
-                                        local mt = L.getPlayerTeam(Players.LocalPlayer)
-                                        local pt = L.getPlayerTeam(PVP.tpTarget)
-                                        if not mt or not pt or mt ~= pt then
-                                            valid = true
-                                        end
+        PVP.tpThread = task.spawn(function()
+            while PVP.tpEnabled do
+                local char = Players.LocalPlayer.Character
+                if char then
+                    local root = char:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        if PVP.tpTarget then
+                            local valid = false
+                            local targetChar = PVP.tpTarget.Character
+                            if targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
+                                local hu = targetChar:FindFirstChildOfClass("Humanoid")
+                                if hu and hu.Health > 0 then
+                                    local mt = L.getPlayerTeam(Players.LocalPlayer)
+                                    local pt = L.getPlayerTeam(PVP.tpTarget)
+                                    if not mt or not pt or mt ~= pt then
+                                        valid = true
                                     end
-                                end
-                                if not valid then
-                                    if PVP.tpHighlight then PVP.tpHighlight:Destroy(); PVP.tpHighlight = nil end
-                                    PVP.tpTarget = nil
-                                    PVP.tpTargetHistory = {}
                                 end
                             end
-
-                            if not PVP.tpTarget then
-                                local bestTarget = nil
-                                local bestDist = mathHuge
-                                local myTeam = L.getPlayerTeam(Players.LocalPlayer)
-                                for _, pl in Players:GetPlayers() do
-                                    if pl == Players.LocalPlayer then continue end
-                                    local c = pl.Character
-                                    if not c then continue end
-                                    local hu = c:FindFirstChildOfClass("Humanoid")
-                                    if not hu or hu.Health <= 0 then continue end
-                                    local hrp = c:FindFirstChild("HumanoidRootPart")
-                                    if not hrp then continue end
-                                    local pt = L.getPlayerTeam(pl)
-                                    if myTeam and pt and myTeam == pt then continue end
-                                    local dist = (hrp.Position - root.Position).Magnitude
-                                    if dist < bestDist then bestDist = dist; bestTarget = pl end
-                                end
-                                if bestTarget then
-                                    PVP.tpTarget = bestTarget
-                                    PVP.tpTargetHistory = {}
-                                    if PVP.tpHighlight then PVP.tpHighlight:Destroy() end
-                                    local hl = Instance.new("Highlight")
-                                    hl.FillColor = c3rgb(0, 255, 0)
-                                    hl.OutlineColor = c3rgb(0, 255, 0)
-                                    hl.FillTransparency = 0.3
-                                    hl.OutlineTransparency = 0.3
-                                    hl.Adornee = bestTarget.Character
-                                    hl.Parent = bestTarget.Character
-                                    PVP.tpHighlight = hl
-                                end
+                            if not valid then
+                                if PVP.tpHighlight then PVP.tpHighlight:Destroy(); PVP.tpHighlight = nil end
+                                PVP.tpTarget = nil
+                                PVP.tpTargetHistory = {}
                             end
+                        end
 
-                            if PVP.tpTarget and PVP.tpTarget.Character then
-                                local targetHRP = PVP.tpTarget.Character:FindFirstChild("HumanoidRootPart")
-                                if targetHRP then
-                                    local now = tick_()
-                                    table.insert(PVP.tpTargetHistory, {time = now, pos = targetHRP.Position, cframe = targetHRP.CFrame})
-                                    if #PVP.tpTargetHistory > 10 then table.remove(PVP.tpTargetHistory, 1) end
-                                    local ping = PVP.getPing()
-                                    local delaySec = ping / 1000
-                                    if #PVP.tpTargetHistory < 2 then
-                                        local lookVec = targetHRP.CFrame.LookVector
-                                        local behindPos = targetHRP.Position - lookVec * 4 + v3new(0, 6, 0)
-                                        root.CFrame = cfNew(behindPos, targetHRP.Position)
-                                        task.wait(0.2)
-                                        continue
-                                    end
-                                    local startIdx = mathMax(1, #PVP.tpTargetHistory - 5)
-                                    local avgVel = Vector3.zero
-                                    local totalAngle = 0
-                                    local totalDt = 0
-                                    local count = 0
-                                    for i = startIdx + 1, #PVP.tpTargetHistory do
-                                        local h1 = PVP.tpTargetHistory[i-1]
-                                        local h2 = PVP.tpTargetHistory[i]
-                                        local dt = h2.time - h1.time
-                                        if dt > 0.001 then
-                                            local v = (h2.pos - h1.pos) / dt
-                                            avgVel = avgVel + v
-                                            local l1 = h1.cframe.LookVector
-                                            local l2 = h2.cframe.LookVector
-                                            local cross = l1:Cross(l2)
-                                            local dot = l1:Dot(l2)
-                                            local angle = math.atan2(cross.Magnitude, dot)
-                                            if dot < 0 then angle = math.pi - angle end
-                                            totalAngle = totalAngle + angle
-                                            totalDt = totalDt + dt
-                                            count = count + 1
-                                        end
-                                    end
-                                    if count > 0 then avgVel = avgVel / count end
-                                    local avgAngleSpeed = 0
-                                    if totalDt > 0.001 then avgAngleSpeed = totalAngle / totalDt end
-                                    local last = PVP.tpTargetHistory[#PVP.tpTargetHistory]
-                                    local predictTime = delaySec
-                                    local predPos = last.pos + avgVel * predictTime
-                                    local predLook = last.cframe.LookVector
-                                    if avgAngleSpeed ~= 0 then
-                                        local rotAngle = avgAngleSpeed * predictTime
-                                        local up = v3new(0, 1, 0)
-                                        local axis = predLook:Cross(up)
-                                        if axis.Magnitude < 0.001 then axis = v3new(1, 0, 0) end
-                                        axis = axis.Unit
-                                        local angleCF = CFrame.fromAxisAngle(axis, rotAngle)
-                                        predLook = angleCF:VectorToWorldSpace(predLook)
-                                    end
-                                    local behindPos = predPos - predLook * 4 + v3new(0, 6, 0)
-                                    root.CFrame = cfNew(behindPos, predPos)
+                        if not PVP.tpTarget then
+                            local bestTarget = nil
+                            local bestDist = mathHuge
+                            local myTeam = L.getPlayerTeam(Players.LocalPlayer)
+                            for _, pl in Players:GetPlayers() do
+                                if pl == Players.LocalPlayer then continue end
+                                local c = pl.Character
+                                if not c then continue end
+                                local hu = c:FindFirstChildOfClass("Humanoid")
+                                if not hu or hu.Health <= 0 then continue end
+                                local hrp = c:FindFirstChild("HumanoidRootPart")
+                                if not hrp then continue end
+                                local pt = L.getPlayerTeam(pl)
+                                if myTeam and pt and myTeam == pt then continue end
+                                local dist = (hrp.Position - root.Position).Magnitude
+                                if dist < bestDist then bestDist = dist; bestTarget = pl end
+                            end
+                            if bestTarget then
+                                PVP.tpTarget = bestTarget
+                                PVP.tpTargetHistory = {}
+                                if PVP.tpHighlight then PVP.tpHighlight:Destroy() end
+                                local hl = Instance.new("Highlight")
+                                hl.FillColor = c3rgb(0, 255, 0)
+                                hl.OutlineColor = c3rgb(0, 255, 0)
+                                hl.FillTransparency = 0.3
+                                hl.OutlineTransparency = 0.3
+                                hl.Adornee = bestTarget.Character
+                                hl.Parent = bestTarget.Character
+                                PVP.tpHighlight = hl
+                            end
+                        end
+
+                        if PVP.tpTarget and PVP.tpTarget.Character then
+                            local targetHRP = PVP.tpTarget.Character:FindFirstChild("HumanoidRootPart")
+                            if targetHRP then
+                                local now = tick_()
+                                table.insert(PVP.tpTargetHistory, {time = now, pos = targetHRP.Position, cframe = targetHRP.CFrame})
+                                if #PVP.tpTargetHistory > 10 then table.remove(PVP.tpTargetHistory, 1) end
+
+                                local ping = PVP.getPing()
+                                local predictTime = ping / 1000
+
+                                if #PVP.tpTargetHistory < 2 then
+                                    local lookVec = targetHRP.CFrame.LookVector
+                                    local behindPos = targetHRP.Position - lookVec * PVP.tpBackDistance + v3new(0, PVP.tpUpOffset, 0)
+                                    root.CFrame = cfNew(behindPos, targetHRP.Position)
+                                    task.wait(0.2)
+                                    continue
                                 end
+
+                                local hist = PVP.tpTargetHistory
+                                local avgVel = Vector3.zero
+                                local totalAngle = 0
+                                local totalDt = 0
+                                local count = 0
+
+                                for i = 2, #hist do
+                                    local h1 = hist[i-1]
+                                    local h2 = hist[i]
+                                    local dt = h2.time - h1.time
+                                    if dt > 0.001 then
+                                        avgVel = avgVel + (h2.pos - h1.pos) / dt
+                                        local l1 = h1.cframe.LookVector
+                                        local l2 = h2.cframe.LookVector
+                                        local cross = l1:Cross(l2)
+                                        local dot = l1:Dot(l2)
+                                        local angle = math.atan2(cross.Magnitude, dot)
+                                        if dot < 0 then angle = math.pi - angle end
+                                        totalAngle = totalAngle + angle
+                                        totalDt = totalDt + dt
+                                        count = count + 1
+                                    end
+                                end
+                                if count > 0 then avgVel = avgVel / count end
+
+                                local dirChange, speedChange = 0, 0
+                                if #hist >= 2 then
+                                    local lastDir = (hist[#hist-1].pos - hist[#hist].pos).Unit
+                                    local currDir = (hist[#hist].pos - hist[#hist-1].pos).Unit
+                                    dirChange = 1 - mathAbs(lastDir:Dot(currDir))
+
+                                    local lastSpeed = (hist[#hist].pos - hist[#hist-1].pos).Magnitude
+                                    local currSpeed = (hist[#hist].pos - hist[#hist-1].pos).Magnitude
+                                    if lastSpeed > 0.1 then
+                                        speedChange = mathAbs(currSpeed - lastSpeed) / lastSpeed
+                                    end
+                                end
+
+                                local penalty = mathMin(1, dirChange * 0.8 + speedChange * 0.4)
+                                local coeff = 1 - penalty * 0.6
+
+                                local last = hist[#hist]
+                                local predPos = last.pos + avgVel * predictTime * coeff
+
+                                if (predPos - last.pos).Magnitude > PVP.tpMaxPredict then
+                                    predPos = last.pos + (predPos - last.pos).Unit * PVP.tpMaxPredict
+                                end
+
+                                local predLook = last.cframe.LookVector
+                                local avgAngleSpeed = 0
+                                if totalDt > 0.001 then avgAngleSpeed = totalAngle / totalDt end
+
+                                if avgAngleSpeed ~= 0 then
+                                    local rotAngle = avgAngleSpeed * predictTime
+                                    local up = v3new(0, 1, 0)
+                                    local axis = predLook:Cross(up)
+                                    if axis.Magnitude < 0.001 then axis = v3new(1, 0, 0) end
+                                    local angleCF = CFrame.fromAxisAngle(axis.Unit, rotAngle)
+                                    predLook = angleCF:VectorToWorldSpace(predLook)
+                                end
+
+                                local behindPos = predPos - predLook * PVP.tpBackDistance
+
+                                local moveDir = avgVel.Magnitude > 0.5 and avgVel.Unit or Vector3.zero
+                                if moveDir.Magnitude > 0 then
+                                    local extraLead = avgVel.Magnitude * PVP.tpExtraLeadTime
+                                    behindPos = behindPos + moveDir * extraLead
+                                end
+
+                                behindPos = behindPos + v3new(0, PVP.tpUpOffset, 0)
+
+                                root.CFrame = cfNew(behindPos, predPos)
                             end
                         end
                     end
-                    task.wait(0.03)
                 end
-            end)
-        else
-            PVP.tpEnabled = false
-            if PVP.tpThread then task.cancel(PVP.tpThread); PVP.tpThread = nil end
-            if PVP.tpHighlight then PVP.tpHighlight:Destroy(); PVP.tpHighlight = nil end
-            PVP.tpTarget = nil
-            PVP.tpTargetHistory = {}
-        end
+                task.wait(0.000000001)
+            end
+        end)
+    else
+        PVP.tpEnabled = false
+        if PVP.tpThread then task.cancel(PVP.tpThread); PVP.tpThread = nil end
+        if PVP.tpHighlight then PVP.tpHighlight:Destroy(); PVP.tpHighlight = nil end
+        PVP.tpTarget = nil
+        PVP.tpTargetHistory = {}
     end
+end
 
     PVP.forceEquipEnabled = false
     PVP.forceEquipConn = nil
@@ -4788,7 +4467,6 @@ L.disguise.lastVictimName = ""
 L.disguise.active = false
 
 function L.disguise.getUserIdByUsername(username)
-    local HttpService = game:GetService("HttpService")
     local success, result = pcall(function()
         return game:HttpGet("https://users.roblox.com/v1/users/search?keyword=" .. HttpService:UrlEncode(username), true)
     end)
@@ -4837,7 +4515,7 @@ function L.disguise.applyAppearanceOnly(victimName)
 
     local success = pcall(function()
         local localPlayer = LocalPlayer
-        local userId, userName, displayName = L.disguise.getUserIdByUsername(victimName)
+        local userId, _userName, displayName = L.disguise.getUserIdByUsername(victimName)
         if not userId then
             Library:Notify({ Title = TranslateText("错误"), Description = TranslateText("找不到该玩家"), Time = 3 })
             return
@@ -5193,6 +4871,7 @@ end)
 AnimsRightGroup:AddToggle('DanceBlyucherToggle', {
     Text = '布吕歇尔',
     Default = false,
+    Tooltip = TranslateTooltip('老不死的布吕歇尔动作（播放完整序列后自动停止）'),
     Callback = function(v)
         if v then
             L.startBlyucher()
@@ -5214,10 +4893,12 @@ AnimsRightGroup:AddToggle('DanceBlyucherToggle', {
 AnimsRightGroup:AddToggle('DanceBarryToggle', {
     Text = 'Barry',
     Default = false,
+    Tooltip = TranslateTooltip('耐咬王 Barry 动作'),
     Callback = function(v)
         if v then L.startBarry() else L.stopBarry() end
     end
 })
+
 
 L.eatBroadcast = { active = false, track = nil }
 
@@ -6474,19 +6155,19 @@ AnimsRightGroup:AddToggle('Anim27432686Toggle', {
 do
     local animActive = false
     local animTrack = nil
-    local animatorRef = nil
+    local _animatorRef = nil
 
     function L.startAnim92032645117961()
         if animActive then return end
         animActive = true
         L.resetAnims()
 
-        local hum, animator = getAnimator()
+        local _hum, animator = getAnimator()
         if not animator then
             animActive = false
             return
         end
-        animatorRef = animator
+        _animatorRef = animator
 
         local anim = Instance.new("Animation")
         anim.AnimationId = "rbxassetid://92032645117961"
@@ -6512,7 +6193,7 @@ do
             pcall(function() animTrack:Stop() end)
             animTrack = nil
         end
-        animatorRef = nil
+        _animatorRef = nil
         L.resetAnims()
     end
 
@@ -6726,7 +6407,7 @@ do
         if animActive then return end
         animActive = true
 
-        local hum, animator = getAnimator()
+        local _hum, animator = getAnimator()
         if not animator then
             animActive = false
             return
@@ -6767,19 +6448,19 @@ do
     local function createUI()
         if uiRef then return end
 
-        local sg, btn = L.createFloatingButton("Anim17871770160UI", "开启", UDim2.new(0.5, 175, 0.45, 0), 18, function()
+        local sg
+        sg, buttonRef = L.createFloatingButton("Anim17871770160UI", "开启", UDim2.new(0.5, 175, 0.45, 0), 18, function()
             if animActive then
                 stopAnimation()
-                btn.Text = "开启"
-                btn.BackgroundColor3 = c3rgb(30, 30, 40)
+                buttonRef.Text = "开启"
+                buttonRef.BackgroundColor3 = c3rgb(30, 30, 40)
             else
                 startAnimation()
-                btn.Text = "关闭"
-                btn.BackgroundColor3 = c3rgb(200, 80, 80)
+                buttonRef.Text = "关闭"
+                buttonRef.BackgroundColor3 = c3rgb(200, 80, 80)
             end
         end)
 
-        buttonRef = btn
         uiRef = sg
     end
 
@@ -7512,7 +7193,7 @@ OfficerGroup:AddToggle('MartyrAutoBlackKnifeToggle', {
     end
 })
 
-local Workspace = game:GetService("Workspace")
+local Workspace = cloneref(game:GetService("Workspace"))
 local lp = LocalPlayer
 
 L.customBlackGunEnabled = false
@@ -8397,10 +8078,10 @@ do
                 SA.hideIndicator()
                 return
             end
-            local targetPart, targetModel = nil, nil
+            local _targetPart, _targetModel = nil, nil
             if SA.SilentAimSelectedTypes and #SA.SilentAimSelectedTypes > 0 then
                 local range = SA.MAX_TARGET_RANGE
-                local cam = workspace.CurrentCamera
+                local _cam = workspace.CurrentCamera
                 local origin = getWallCheckOrigin()
                 if not origin then return end
                 local baseIgnore = buildBaseIgnore()
@@ -9138,9 +8819,6 @@ ExtraLeftGroup:AddDropdown('AutoRepairMode', {
     end
 })
 
-
-
-
 L.forceBrace = L.forceBrace or {}
 L.forceBrace.enabled = false
 L.forceBrace.thread = nil
@@ -9463,9 +9141,6 @@ ExtraLeftGroup:AddSlider('EngineerElbowCount', {
     end
 })
 
-
-
-
 L.engineerRecycleEnabled = false
 L.recycleAnimConnection = nil
 
@@ -9649,7 +9324,7 @@ function L.doctor.autoPickup.loop()
         local char = LocalPlayer.Character
         local hrp = L.doctor.autoPickup.getHRP(char)
         if hrp then
-            local prompt, part, dist = L.doctor.autoPickup.findDrop(hrp.Position, L.doctor.autoPickup.range)
+            local prompt, _part, dist = L.doctor.autoPickup.findDrop(hrp.Position, L.doctor.autoPickup.range)
             if prompt and dist <= L.doctor.autoPickup.range then
                 pcall(function() fireproximityprompt(prompt) end)
                 task.wait(0.05)
@@ -9910,213 +9585,6 @@ RightGroup:AddButton({
     Tooltip = TranslateTooltip("仅修改显示名字"),
 })
 
-local CherryBlossom = {}
-CherryBlossom.__index = CherryBlossom
-
-function CherryBlossom.new()
-    local self = setmetatable({}, CherryBlossom)
-    self.Lighting = Lighting
-    self.Workspace = Workspace
-    self.TweenService = TweenService
-    self.LocalPlayer = Players.LocalPlayer
-    self.Config = {
-        MaxParticles = 1200,
-        SpawnInterval = 0.03,
-        Radius = 60,
-        WindX = -8,
-        WindY = -12,
-        WindZ = 6,
-        TextureID = "rbxassetid://7456123890",
-        NeonRatio = 0.35
-    }
-    self.Pool = {}
-    self.PoolIndex = 1
-    self.Folder = nil
-    self.IsRunning = false
-    return self
-end
-
-function CherryBlossom:ClearSession()
-    pcall(function()
-        local oldFolder = self.Workspace:FindFirstChild("CherryBlossom_Layer")
-        if oldFolder then oldFolder:Destroy() end
-    end)
-    for _, fx in self.Lighting:GetChildren() do
-        if fx.Name:find("BlossomFX_") then pcall(function() fx:Destroy() end) end
-    end
-end
-
-function CherryBlossom:ApplyLightingPipeline()
-    pcall(function()
-        settings().Rendering.QualityLevel = Enum.QualityLevel.Level21
-        self.Lighting.Technology = Enum.Technology.Future
-        self.Lighting.GlobalShadows = true
-        self.Lighting.EnvironmentDiffuseScale = 0.55
-        self.Lighting.EnvironmentSpecularScale = 0.55
-    end)
-    self.Lighting.ClockTime = 20.6
-    self.Lighting.Brightness = 1.2
-    self.Lighting.Ambient = c3rgb(55, 45, 55)
-    self.Lighting.OutdoorAmbient = c3rgb(75, 65, 85)
-    local atmosphere = self.Lighting:FindFirstChildOfClass("Atmosphere")
-    if not atmosphere then
-        atmosphere = Instance.new("Atmosphere")
-        atmosphere.Parent = self.Lighting
-    end
-    atmosphere.Density = 0.38
-    atmosphere.Haze = 2.0
-    atmosphere.Color = c3rgb(255, 180, 195)
-    atmosphere.Decay = c3rgb(80, 40, 55)
-    atmosphere.Glare = 0.15
-    local colorCorrection = Instance.new("ColorCorrectionEffect")
-    colorCorrection.Name = "BlossomFX_Color"
-    colorCorrection.Brightness = 0.02; colorCorrection.Contrast = 0.12; colorCorrection.Saturation = 0.25
-    colorCorrection.TintColor = c3rgb(255, 240, 245)
-    colorCorrection.Parent = self.Lighting
-    local bloom = Instance.new("BloomEffect")
-    bloom.Name = "BlossomFX_Bloom"
-    bloom.Intensity = 0.45; bloom.Size = 16; bloom.Threshold = 0.85
-    bloom.Parent = self.Lighting
-    local sunRays = self.Lighting:FindFirstChildOfClass("SunRaysEffect")
-    if sunRays then pcall(function() sunRays:Destroy() end) end
-end
-
-function CherryBlossom:InitializeParticlePool()
-    self.Folder = Instance.new("Folder")
-    self.Folder.Name = "CherryBlossom_Layer"
-    self.Folder.Parent = self.Workspace
-    for i = 1, self.Config.MaxParticles do
-        local petal = Instance.new("Part")
-        petal.Size = v3new(1, 1, 1)
-        petal.CanCollide = false; petal.CanTouch = false; petal.CanQuery = false
-        petal.Anchored = true; petal.CastShadow = false; petal.Transparency = 1
-        petal.Position = v3new(0, 9999, 0)
-        petal.Parent = self.Folder
-        local isNeon = math.random() < self.Config.NeonRatio
-        petal.Material = isNeon and Enum.Material.Neon or Enum.Material.SmoothPlastic
-        petal.Color = isNeon and c3rgb(255, 200, 225) or c3rgb(235, 205, 215)
-        local mesh = Instance.new("SpecialMesh")
-        mesh.MeshType = Enum.MeshType.Sphere
-        local length = math.random(4, 8) / 10
-        mesh.Scale = v3new(length * 0.65, 0.02, length)
-        mesh.Parent = petal
-        local decal = Instance.new("Decal")
-        decal.Texture = self.Config.TextureID
-        decal.Face = Enum.NormalId.Top
-        decal.Transparency = isNeon and 0.4 or 0.05
-        decal.Parent = petal
-        local bottomDecal = decal:Clone()
-        bottomDecal.Face = Enum.NormalId.Bottom
-        bottomDecal.Parent = petal
-        self.Pool[i] = {
-            Part = petal,
-            TweenMove = nil,
-            TweenFade = nil,
-            IsNeon = isNeon
-        }
-    end
-end
-
-function CherryBlossom:EmitPetal(playerRoot)
-    if not playerRoot or not self.IsRunning then return end
-    local slot = self.Pool[self.PoolIndex]
-    self.PoolIndex = (self.PoolIndex % self.Config.MaxParticles) + 1
-    if slot.TweenMove then pcall(function() slot.TweenMove:Cancel() end) end
-    if slot.TweenFade then pcall(function() slot.TweenFade:Cancel() end) end
-    local petal = slot.Part
-    local rad = self.Config.Radius
-    local startPos = playerRoot.Position + v3new(
-        math.random(-rad * 10, rad * 10) / 10,
-        math.random(150, 450) / 10,
-        math.random(-rad * 10, rad * 10) / 10
-    )
-    local duration = math.random(35, 60) / 10
-    local endPos = startPos + v3new(
-        self.Config.WindX + math.random(-80, 80) / 10,
-        self.Config.WindY - math.random(50, 100) / 10,
-        self.Config.WindZ + math.random(-80, 80) / 10
-    )
-    petal.Position = startPos
-    petal.CFrame = cfNew(startPos) * CFrame.Angles(mathRad(math.random(0, 360)), mathRad(math.random(0, 360)), mathRad(math.random(0, 360)))
-    petal.Transparency = 1
-    local targetTransparency = slot.IsNeon and 0.1 or math.random(5, 20) / 100
-    slot.TweenFade = self.TweenService:Create(petal, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {Transparency = targetTransparency})
-    slot.TweenMove = self.TweenService:Create(petal, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
-        CFrame = cfNew(endPos) * CFrame.Angles(mathRad(math.random(270, 720)), mathRad(math.random(180, 540)), mathRad(math.random(270, 720)))
-    })
-    slot.TweenFade:Play()
-    slot.TweenMove:Play()
-    task.delay(duration - 0.5, function()
-        if self.IsRunning and petal and petal.Parent then
-            pcall(function() self.TweenService:Create(petal, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {Transparency = 1}):Play() end)
-        end
-    end)
-    task.delay(duration, function()
-        if petal and petal.Parent then
-            petal.Transparency = 1
-            petal.Position = v3new(0, 9999, 0)
-        end
-    end)
-end
-
-function CherryBlossom:Start()
-    self:ClearSession()
-    self:ApplyLightingPipeline()
-    self:InitializeParticlePool()
-    self.IsRunning = true
-    task.spawn(function()
-        while self.IsRunning do
-            local char = self.LocalPlayer.Character
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-            if root then
-                for _ = 1, 4 do
-                    if not self.IsRunning then break end
-                    self:EmitPetal(root)
-                end
-            end
-            task.wait(self.Config.SpawnInterval)
-        end
-    end)
-end
-
-function CherryBlossom:Destroy()
-    self.IsRunning = false
-    for _, slot in self.Pool do
-        if slot.TweenMove then pcall(function() slot.TweenMove:Cancel() end) end
-        if slot.TweenFade then pcall(function() slot.TweenFade:Cancel() end) end
-    end
-    self:ClearSession()
-    self.Pool = {}
-end
-
-_G.CherryBlossomInstance = nil
-function _G.StartCherryBlossom()
-    if _G.CherryBlossomInstance then _G.CherryBlossomInstance:Destroy() end
-    _G.CherryBlossomInstance = CherryBlossom.new()
-    _G.CherryBlossomInstance:Start()
-    shared.CherryBlossomActiveSession = _G.StartCherryBlossom
-end
-function _G.StopCherryBlossom()
-    if _G.CherryBlossomInstance then
-        _G.CherryBlossomInstance:Destroy()
-        _G.CherryBlossomInstance = nil
-    end
-    shared.CherryBlossomActiveSession = nil
-end
-
-if shared.CherryBlossomActiveSession then
-    pcall(function() shared.CherryBlossomActiveSession() end)
-end
-
-RightGroup:AddToggle("CherryBlossomToggle", {
-    Text = "樱花天空(无法恢复)",
-    Tooltip = TranslateTooltip("飘落樱花花瓣 紫色天空 记住无法恢复"),
-    Default = false,
-    Callback = function(state)
-        if state then _G.StartCherryBlossom() else _G.StopCherryBlossom() end
-    end
-})
-
 L.francModifier = L.francModifier or {}
 L.francModifier.enabled = false
 L.francModifier.targetValue = 99999999
@@ -10315,7 +9783,7 @@ end
 
 function L.serverTracker.init()
     if L.serverTracker.initialized then return end
-    local event, func = getServerEvents()
+    local event, _func = getServerEvents()
     if not event then return end
     event.OnClientEvent:Connect(function(action, data)
         if action == "ReturnListing" and data then
@@ -10348,8 +9816,8 @@ function L.serverTracker.init()
             local foundServer = nil
             for _, server in data do
                 if server.PlayerListing then
-                    for _, id in server.PlayerListing do
-                        if tonumber(id) == userId then
+                    for _, playerId in server.PlayerListing do
+                        if tonumber(playerId) == userId then
                             foundServer = server
                             break
                         end
@@ -11074,17 +10542,55 @@ AnimsLeftGroup:AddToggle('AnimBoxerUIToggle', {
     end
 })
 
-local RightGroup = Tabs.Main:AddGroupbox({ Side = "Right", Name = "杀戮光环", IconName = "circle-dot", Description = "自动攻击" })
+local KillAuraGroup = Tabs.Main:AddGroupbox({ Side = "Right", Name = "杀戮光环", IconName = "circle-dot", Description = "自动攻击" })
 
+local auraMode = "工兵"
 
-local FlyGroup = Tabs.Main:AddGroupbox({ Side = "Left", Name = "飞行功能", IconName = "plane", Description = "飞行控制" })
-
-FlyGroup:AddButton({
-    Text = "飞行-无相机锁定",
-    Func = function()
-        L.FlyOriginal()
+KillAuraGroup:AddDropdown('AuraMode', {
+    Values = { "工兵", "防封" },
+    Default = 1,
+    Multi = false,
+    Text = '杀戮光环模式',
+    Tooltip = TranslateTooltip('选择杀戮光环模式（实时切换）'),
+    Callback = function(Value)
+        auraMode = Value
+        if auraMasterEnabled then
+            if L.auraEnabled then L.stopAura() end
+            if L.qingShuiAura and L.qingShuiAura.enabled then L.stopQingShuiAura() end
+            if auraMode == "工兵" then
+                L.startAura()
+            elseif auraMode == "防封" then
+                L.startQingShuiAura()
+            end
+        end
     end
 })
+
+KillAuraGroup:AddDivider()
+
+KillAuraGroup:AddToggle('AuraToggle', {
+    Text = '开启杀戮光环',
+    Default = false,
+    Tooltip = TranslateTooltip('开启/关闭杀戮光环（根据下拉框选择的模式）'),
+    Callback = function(Value)
+        auraMasterEnabled = Value
+        if L.auraEnabled then L.stopAura() end
+        if L.qingShuiAura and L.qingShuiAura.enabled then L.stopQingShuiAura() end
+
+        if Value then
+            if auraMode == "工兵" then
+                L.startAura()
+            elseif auraMode == "防封" then
+                L.startQingShuiAura()
+            end
+            L.startIndicatorUpdater()
+        else
+            L.stopIndicatorUpdater()
+        end
+    end
+})
+
+local FlyGroup = Tabs.Main:AddGroupbox({ Side = "Left", Name = "飞行功能", IconName = "plane", Description = "飞行控制" })
 
 FlyGroup:AddButton({
     Text = "飞行-优化",
@@ -11235,12 +10741,321 @@ FlyGroup:AddButton({
 
 FlyGroup:AddLabel('WASD/摇杆移动，空格/跳跃键上升，Ctrl下降。')
 
-function L.FlyOriginal()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/wzhxll/stjnr/refs/heads/main/README.md"))()
+function L.FlyNew()
+    loadstring([==[
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local lp = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local pgui = lp:WaitForChild("PlayerGui")
+local ControlModule = require(lp.PlayerScripts:WaitForChild("PlayerModule")):GetControls()
+
+local Fly = { bv=nil, bg=nil, animCache=nil, hrp=nil, hum=nil, isFlying=false, flySpeed=40, isWallhack=false, originalCollisions={} }
+
+local function getBodyParts(character)
+    local parts = {}
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        local success, rigParts = pcall(function() return humanoid:GetRigParts() end)
+        if success and rigParts then
+            for _, part in ipairs(rigParts) do if part:IsA("BasePart") then table.insert(parts, part) end end
+        end
+    end
+    if #parts == 0 then
+        for _, name in ipairs({"Head","Torso","UpperTorso","LowerTorso","HumanoidRootPart","Left Arm","Right Arm","Left Leg","Right Leg","LeftUpperArm","LeftLowerArm","RightUpperArm","RightLowerArm","LeftUpperLeg","LeftLowerLeg","RightUpperLeg","RightLowerLeg"}) do
+            local part = character:FindFirstChild(name)
+            if part and part:IsA("BasePart") then table.insert(parts, part) end
+        end
+    end
+    return parts
 end
 
-function L.FlyNew()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/wzhxll/Sha-Bi/refs/heads/main/README.md"))()
+local SmoothTurner = {}
+SmoothTurner.__index = SmoothTurner
+function SmoothTurner.new(rootPart, cam, options)
+    options = options or {}
+    local self = setmetatable({}, SmoothTurner)
+    self.RootPart = rootPart
+    self.Camera = cam or workspace.CurrentCamera
+    self.Enabled = false
+    self.BodyGyro = nil
+    self.P = options.P or 10000
+    self.D = options.D or 50
+    self.MaxTorque = options.MaxTorque or Vector3.new(math.huge, math.huge, math.huge)
+    return self
+end
+function SmoothTurner:Start()
+    if self.Enabled then return end
+    if not self.RootPart or not self.RootPart.Parent then return end
+    local gyro = Instance.new("BodyGyro")
+    gyro.MaxTorque = self.MaxTorque
+    gyro.P = self.P
+    gyro.D = self.D
+    gyro.CFrame = self.RootPart.CFrame
+    gyro.Parent = self.RootPart
+    self.BodyGyro = gyro
+    self.Enabled = true
+    self:_startHeartbeat()
+end
+function SmoothTurner:Stop()
+    if self.BodyGyro then self.BodyGyro:Destroy(); self.BodyGyro = nil end
+    self.Enabled = false
+    if self.HeartbeatConn then self.HeartbeatConn:Disconnect(); self.HeartbeatConn = nil end
+end
+function SmoothTurner:SetDirection(direction)
+    if not self.Enabled or not self.BodyGyro or not self.RootPart then return end
+    self.BodyGyro.CFrame = CFrame.lookAt(self.RootPart.Position, self.RootPart.Position + direction.Unit)
+end
+function SmoothTurner:_startHeartbeat()
+    if self.HeartbeatConn then self.HeartbeatConn:Disconnect() end
+    self.HeartbeatConn = RunService.Heartbeat:Connect(function()
+        if not self.Enabled or not self.BodyGyro or not self.RootPart or not self.Camera then return end
+        self:SetDirection(self.Camera.CFrame.LookVector)
+    end)
+end
+function SmoothTurner:Destroy() self:Stop(); self.RootPart=nil; self.Camera=nil end
+
+local flyTurner = nil
+
+function Fly.clearFlyRes()
+    local char = lp.Character
+    if char then
+        local bodyParts = getBodyParts(char)
+        for part, originalState in pairs(Fly.originalCollisions) do
+            if part and part.Parent then
+                for _, bp in ipairs(bodyParts) do if bp == part then part.CanCollide = originalState; break end end
+            end
+        end
+        Fly.originalCollisions = {}
+    end
+    if Fly.animCache and lp.Character then Fly.animCache.Parent = lp.Character end
+    if Fly.bv then Fly.bv:Destroy() end
+    if Fly.bg then Fly.bg:Destroy() end
+    Fly.bv, Fly.bg = nil, nil
+    if flyTurner then flyTurner:Destroy(); flyTurner = nil end
+    if Fly.hum and Fly.hum.Parent then Fly.hum:ChangeState(Enum.HumanoidStateType.Running) end
+end
+
+function Fly.ensurePhysics(hrp, useGyro)
+    if hrp:FindFirstChild("LeipzigBV_new") then hrp.LeipzigBV_new:Destroy() end
+    if hrp:FindFirstChild("LeipzigBG_new") then hrp.LeipzigBG_new:Destroy() end
+    Fly.bv = Instance.new("BodyVelocity", hrp)
+    Fly.bv.Name = "LeipzigBV_new"
+    Fly.bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+    if useGyro then
+        if flyTurner then flyTurner:Destroy() end
+        flyTurner = SmoothTurner.new(hrp, workspace.CurrentCamera)
+        flyTurner:Start()
+    end
+end
+
+function Fly.applyWallhackState()
+    local char = lp.Character
+    if not char then return end
+    if Fly.isWallhack then
+        local bodyParts = getBodyParts(char)
+        Fly.originalCollisions = {}
+        for _, part in ipairs(bodyParts) do
+            Fly.originalCollisions[part] = part.CanCollide
+            part.CanCollide = false
+        end
+    else
+        for part, originalState in pairs(Fly.originalCollisions) do
+            if part and part.Parent then part.CanCollide = originalState end
+        end
+        Fly.originalCollisions = {}
+    end
+end
+
+function Fly.startFlyNormal()
+    local char = lp.Character
+    if not char then return end
+    Fly.hrp = char:WaitForChild("HumanoidRootPart")
+    Fly.hum = char:WaitForChild("Humanoid")
+    local ani = char:FindFirstChild("Animate")
+    if ani then Fly.animCache = ani; ani.Parent = nil end
+    Fly.ensurePhysics(Fly.hrp, true)
+    task.spawn(function()
+        while Fly.isFlying and char.Parent do
+            local mv = ControlModule:GetMoveVector()
+            local cf = camera.CFrame
+            local dir = (cf.LookVector * -mv.Z) + (cf.RightVector * mv.X)
+            if mv.Magnitude > 0 then Fly.bv.Velocity = dir.Unit * Fly.flySpeed
+            else Fly.bv.Velocity = Vector3.new(0, 0.01, 0) end
+            Fly.hum:ChangeState(Enum.HumanoidStateType.Climbing)
+            RunService.RenderStepped:Wait()
+        end
+        Fly.clearFlyRes()
+    end)
+end
+
+function Fly.startFlyWallhack()
+    local char = lp.Character
+    if not char then return end
+    Fly.hrp = char:WaitForChild("HumanoidRootPart")
+    Fly.hum = char:WaitForChild("Humanoid")
+    local ani = char:FindFirstChild("Animate")
+    if ani then Fly.animCache = ani; ani.Parent = nil end
+    Fly.applyWallhackState()
+    Fly.ensurePhysics(Fly.hrp, true)
+    task.spawn(function()
+        local lastPos = Fly.hrp.Position
+        local lastTime = tick()
+        while Fly.isFlying and char.Parent do
+            local dt = tick() - lastTime
+            lastTime = tick()
+            local mv = ControlModule:GetMoveVector()
+            local cf = camera.CFrame
+            local dir = (cf.LookVector * -mv.Z) + (cf.RightVector * mv.X)
+            local targetVelocity
+            if mv.Magnitude > 0 then
+                targetVelocity = dir.Unit * Fly.flySpeed
+                Fly.bv.Velocity = targetVelocity
+            else
+                Fly.bv.Velocity = Vector3.new(0, 0.01, 0)
+                targetVelocity = Vector3.new(0, 0.01, 0)
+            end
+            Fly.hum:ChangeState(Enum.HumanoidStateType.Climbing)
+            RunService.RenderStepped:Wait()
+            local expectedPos = lastPos + targetVelocity * dt
+            local actualPos = Fly.hrp.Position
+            local deviation = actualPos - expectedPos
+            if deviation.Magnitude > 0.00001 then
+                Fly.hrp.CFrame = CFrame.new(expectedPos) * Fly.hrp.CFrame.Rotation
+                Fly.bv.Velocity = targetVelocity
+                lastPos = expectedPos
+            else lastPos = actualPos end
+        end
+        Fly.clearFlyRes()
+    end)
+end
+
+function Fly.startFly()
+    if Fly.isFlying then return end
+    Fly.isFlying = true
+    if Fly.isWallhack then Fly.startFlyWallhack() else Fly.startFlyNormal() end
+end
+
+function Fly.stopFly()
+    if not Fly.isFlying then return end
+    Fly.isFlying = false
+    Fly.clearFlyRes()
+end
+
+function Fly.bindCharacter()
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    Fly.hrp = char:WaitForChild("HumanoidRootPart")
+    Fly.hum = char:WaitForChild("Humanoid")
+    Fly.clearFlyRes()
+    char.AncestryChanged:Connect(function(_, parent)
+        if not parent then Fly.clearFlyRes(); Fly.bindCharacter() end
+    end)
+end
+Fly.bindCharacter()
+
+if pgui:FindFirstChild("NewFlightUI") then pgui.NewFlightUI:Destroy() end
+task.wait(0.1)
+
+local UI_BG = Color3.fromRGB(200, 230, 255)
+local BTN_OFF = Color3.fromRGB(150, 200, 255)
+local BTN_ON = Color3.fromRGB(70, 150, 255)
+local DESTROY_BTN = Color3.fromRGB(110, 180, 255)
+local TEXT_COLOR = Color3.fromRGB(0, 60, 120)
+local SPEED_BG = Color3.fromRGB(180, 220, 255)
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NewFlightUI"
+ScreenGui.Parent = pgui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 999
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 150, 0, 160)
+MainFrame.Position = UDim2.new(0.5, -75, 0.3, 0)
+MainFrame.BackgroundColor3 = UI_BG
+MainFrame.BackgroundTransparency = 0.4
+MainFrame.Draggable = true
+MainFrame.Active = true
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+local stroke = Instance.new("UIStroke", MainFrame)
+stroke.Color = Color3.fromRGB(120, 200, 255)
+stroke.Thickness = 3
+stroke.Transparency = 0.1
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1,0,0,20); Title.BackgroundTransparency = 1
+Title.Text = "飞行-优化"; Title.TextColor3 = TEXT_COLOR; Title.TextSize = 12; Title.Font = Enum.Font.GothamBold
+
+local SpeedInput = Instance.new("TextBox", MainFrame)
+SpeedInput.Size = UDim2.new(0,120,0,24); SpeedInput.Position = UDim2.new(0.5,-60,0, 30)
+SpeedInput.BackgroundColor3 = SPEED_BG; SpeedInput.BackgroundTransparency = 0.3
+SpeedInput.Text = "40"; SpeedInput.TextColor3 = TEXT_COLOR; SpeedInput.TextSize = 11
+Instance.new("UICorner", SpeedInput).CornerRadius = UDim.new(0,7)
+
+local WallhackBtn = Instance.new("TextButton", MainFrame)
+WallhackBtn.Size = UDim2.new(0,120,0,26); WallhackBtn.Position = UDim2.new(0.5,-60,0, 64)
+WallhackBtn.BackgroundColor3 = BTN_OFF; WallhackBtn.BackgroundTransparency = 0.3
+WallhackBtn.Text = "穿墙模式: 关闭"; WallhackBtn.TextColor3 = TEXT_COLOR; WallhackBtn.TextSize = 11
+Instance.new("UICorner", WallhackBtn).CornerRadius = UDim.new(0,8)
+
+local FlyBtn = Instance.new("TextButton", MainFrame)
+FlyBtn.Size = UDim2.new(0,120,0,26); FlyBtn.Position = UDim2.new(0.5,-60,0, 98)
+FlyBtn.BackgroundColor3 = BTN_OFF; FlyBtn.BackgroundTransparency = 0.3
+FlyBtn.Text = "飞行"; FlyBtn.TextColor3 = TEXT_COLOR; FlyBtn.TextSize = 11
+Instance.new("UICorner", FlyBtn).CornerRadius = UDim.new(0,8)
+
+local DestroyUI = Instance.new("TextButton", MainFrame)
+DestroyUI.Size = UDim2.new(0,120,0,26); DestroyUI.Position = UDim2.new(0.5,-60,0, 132)
+DestroyUI.BackgroundColor3 = DESTROY_BTN; DestroyUI.BackgroundTransparency = 0.3
+DestroyUI.Text = "销毁UI"; DestroyUI.TextColor3 = TEXT_COLOR; DestroyUI.TextSize = 11
+Instance.new("UICorner", DestroyUI).CornerRadius = UDim.new(0,8)
+
+local dragging, dragStart, startPos
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true; dragStart = input.Position; startPos = MainFrame.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+end)
+
+SpeedInput.FocusLost:Connect(function()
+    local val = tonumber(SpeedInput.Text)
+    if val then Fly.flySpeed = math.clamp(val, 10, 100) else Fly.flySpeed = 40 end
+    SpeedInput.Text = tostring(Fly.flySpeed)
+end)
+
+WallhackBtn.MouseButton1Click:Connect(function()
+    Fly.isWallhack = not Fly.isWallhack
+    WallhackBtn.Text = "穿墙模式: " .. (Fly.isWallhack and "开启" or "关闭")
+    WallhackBtn.BackgroundColor3 = Fly.isWallhack and BTN_ON or BTN_OFF
+    if Fly.isFlying then Fly.stopFly(); task.wait(0.05); Fly.startFly() else Fly.applyWallhackState() end
+end)
+
+FlyBtn.MouseButton1Click:Connect(function()
+    if Fly.isFlying then
+        Fly.stopFly(); FlyBtn.Text = "飞行"; FlyBtn.BackgroundColor3 = BTN_OFF
+    else
+        Fly.startFly(); FlyBtn.Text = "飞行开"; FlyBtn.BackgroundColor3 = BTN_ON
+    end
+end)
+
+DestroyUI.MouseButton1Click:Connect(function()
+    Fly.stopFly(); Fly.applyWallhackState(); ScreenGui:Destroy()
+end)
+
+MainFrame.Size = UDim2.new(0,0,0,0)
+MainFrame:TweenSize(UDim2.new(0,150,0,160), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.4, true)
+]==])()
 end
 
 L.warpFly = {
@@ -11613,7 +11428,7 @@ end
 
 function L.tpFreecam.tpTo(cf)
     if not cf then return end
-    local char, hum, hrp = L.tpFreecam.getChar()
+    local char, _hum, hrp = L.tpFreecam.getChar()
     if not char then return end
     hrp.Anchored = true
     L.tpFreecam.setNoclip(char)
@@ -11640,7 +11455,7 @@ function L.tpFreecam.pointNames()
     for i, pt in L.tpFreecam.saved do
         if pt and pt.CFrame then
             local p = pt.CFrame.Position
-            names[#names + 1] = string.format("%d. %s (%.0f,%.0f,%.0f)", i, tostring(pt.Name), p.X, p.Y, p.Z)
+            names[#names + 1] = strFormat("%d. %s (%.0f,%.0f,%.0f)", i, tostring(pt.Name), p.X, p.Y, p.Z)
         end
     end
     return names
@@ -11656,7 +11471,10 @@ function L.tpFreecam.refreshDropdown()
         local sel = L.tpFreecam.selected
         local ok = false
         for _, n in names do
-            if n == sel then ok = true break end
+            if n == sel then
+                ok = true
+                break
+            end
         end
         if not ok then
             L.tpFreecam.selected = names[1]
@@ -11742,31 +11560,34 @@ end
 
 function L.tpFreecam.updateMoveDir()
     local camera = workspace.CurrentCamera
-    if not camera then L.tpFreecam.moveDir = v3new(0, 0, 0) return end
+    if not camera then
+        L.tpFreecam.moveDir = v3new(0, 0, 0)
+        return
+    end
     local forward = camera.CFrame.LookVector
     local right = camera.CFrame.RightVector
     local direction = v3new(0, 0, 0)
-    if UserInputService:IsKeyDown(Enum.KeyCode.W) then direction += forward end
-    if UserInputService:IsKeyDown(Enum.KeyCode.S) then direction -= forward end
-    if UserInputService:IsKeyDown(Enum.KeyCode.A) then direction -= right end
-    if UserInputService:IsKeyDown(Enum.KeyCode.D) then direction += right end
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then direction = direction + forward end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then direction = direction - forward end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then direction = direction - right end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then direction = direction + right end
     if UserInputService:IsKeyDown(Enum.KeyCode.Space) or UserInputService:IsKeyDown(Enum.KeyCode.E) then
-        direction += v3new(0, 1, 0)
+        direction = direction + v3new(0, 1, 0)
     end
     if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.Q) then
-        direction -= v3new(0, 1, 0)
+        direction = direction - v3new(0, 1, 0)
     end
     if direction.Magnitude < 0.1 and UserInputService.TouchEnabled then
         local cm = L.tpFreecam.getControls()
         if cm then
             local ok, mv = pcall(function() return cm:GetMoveVector() end)
-            if ok and typeof(mv) == "Vector3" and mv.Magnitude > 0.1 then
-                direction += (right * mv.X) + (forward * -mv.Z)
+            if ok and type(mv) == "userdata" and mv.Magnitude > 0.1 then
+                direction = direction + (right * mv.X) + (forward * -mv.Z)
             end
         end
     end
     if osClock() < (L.tpFreecam.jumpUpUntil or 0) then
-        direction += v3new(0, 1, 0)
+        direction = direction + v3new(0, 1, 0)
     end
     if direction.Magnitude > 0.1 then
         L.tpFreecam.moveDir = direction.Unit * L.tpFreecam.speed
@@ -11789,7 +11610,7 @@ function L.tpFreecam.onHeartbeat(dt)
     if soul and soul.Parent then
         pcall(function()
             if L.tpFreecam.moveDir.Magnitude > TPF_IDLE_THRESHOLD then
-                soul.CFrame += L.tpFreecam.moveDir * dt
+                soul.CFrame = soul.CFrame + L.tpFreecam.moveDir * dt
                 L.tpFreecam.hoverPos = soul.Position
             else
                 soul.CFrame = cfNew(L.tpFreecam.hoverPos) * soul.CFrame.Rotation
@@ -11809,7 +11630,7 @@ function L.tpFreecam.installListeners()
             c.Thickness = 2
             c.Filled = false
             c.Transparency = 1
-            c.Color = Color3.fromRGB(0, 255, 0)
+            c.Color = c3rgb(0, 255, 0)
             L.tpFreecam.circle = c
         end
     end)
@@ -12236,6 +12057,15 @@ AutoLeftGroup:AddToggle('DraculaHighlightToggle', {
     end
 })
 
+AutoLeftGroup:AddToggle('BoomDrawToggle', {
+    Text = '自爆倒计时显示',
+    Default = false,
+    Tooltip = TranslateTooltip('显示自爆僵尸爆炸剩余时间'),
+    Callback = function(Value)
+        if Value then L.boomDraw.start() else L.boomDraw.stop() end
+    end
+})
+
 local AutoPlayerESPGroup = AutoESPTabbox:AddTab("玩家透视")
 
 AutoPlayerESPGroup:AddToggle('PlayerESPEnable', {
@@ -12387,28 +12217,26 @@ MinorLeftGroup:AddToggle('AutoHelpToggleMisc', {
 local MinorGetGroup = Tabs.Misc:AddGroupbox({ Side = "Right", Name = "获取", IconName = "package", Description = "获取装备" })
 
 
-MinorGetGroup:AddButton({
-    Text = "获取吸血鬼刀 (Voivode)",
+local voivodeBtn = MinorGetGroup:AddButton({
+    Text = "获取吸血鬼刀",
     Func = function()
         local purchase = L.getPurchaseEvent()
         if purchase then
             purchase:FireServer("Voivode")
-
             L.notify(TranslateText("已获取吸血鬼刀"), 2)
         end
-    end
+    end,
 })
 
-
-MinorGetGroup:AddButton({
-    Text = "获取铁桩 (Iron Stake)",
+voivodeBtn:AddButton({
+    Text = "获取铁桩",
     Func = function()
         local purchase = L.getPurchaseEvent()
         if purchase then
             purchase:FireServer("Iron Stake")
             L.notify(TranslateText("已获取铁桩"), 2)
         end
-    end
+    end,
 })
 
 function L.removeAllHats()
@@ -12508,7 +12336,7 @@ L.noFogDebounce = false
 
 function L.saveNoFogOriginal()
     if L.noFogOriginalsSaved then return end
-    local ok = pcall(function()
+    local _ok = pcall(function()
         L.noFogOriginal = {
             FogEnd = Lighting.FogEnd,
             FogStart = Lighting.FogStart,
@@ -13067,7 +12895,7 @@ L.AutoEscape = {
     heartbeatConn = nil,
     originalIndex = nil,
     camBindName = nil,
-    offset = Vector3.new(0, 0, 0),
+    offset = v3new(0, 0, 0),
     savedCF = nil,
     savedVel = nil,
 }
@@ -13082,8 +12910,8 @@ function L.AutoEscape.updateOffset()
     if head then
         topY = head.Position.Y
     end
-    local up = (topY - hrp.Position.Y) + 680
-    L.AutoEscape.offset = Vector3.new(0, up, 0)
+    local up = (topY - hrp.Position.Y) + 5680
+    L.AutoEscape.offset = v3new(0, up, 0)
 end
 
 function L.AutoEscape.start()
@@ -13104,7 +12932,7 @@ function L.AutoEscape.start()
         state.savedVel = i.AssemblyLinearVelocity
         local j = i.CFrame + state.offset
         i.CFrame = j
-        i.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        i.AssemblyLinearVelocity = v3new(0, 0, 0)
         RS.RenderStepped:Wait()
         if b.Character and b.Character:FindFirstChild("HumanoidRootPart") then
             b.Character.HumanoidRootPart.CFrame = state.savedCF
@@ -13117,9 +12945,9 @@ function L.AutoEscape.start()
             if not checkcaller() then
                 if l == "CFrame" and b.Character and b.Character:FindFirstChild("HumanoidRootPart") and b.Character:FindFirstChild("Humanoid") and b.Character:FindFirstChild("Humanoid").Health > 0 then
                     if self == b.Character.HumanoidRootPart then
-                        return (state.savedCF or CFrame.new()) + state.offset
+                        return (state.savedCF or cfNew()) + state.offset
                     elseif self == b.Character.Head then
-                        local m = state.savedCF or CFrame.new()
+                        local m = state.savedCF or cfNew()
                         return m + state.offset
                     end
                 end
@@ -13263,7 +13091,7 @@ function L.antiVelocity.restoreTracks(char, saved)
             animator = Instance.new("Animator")
             animator.Parent = hum
         end
-        -- build set of currently playing ids so we don't stack duplicates
+        
         local playingIds = {}
         pcall(function()
             for _, t in hum:GetPlayingAnimationTracks() do
@@ -13323,13 +13151,13 @@ function L.antiVelocityEnable()
             pcall(function() hum0.AutoRotate = true end)
         end
 
-        -- 1. 禁用骨折速度限制器（每帧执行）
+        
         local velObj = hrp:FindFirstChild("KillVelocity") or hrp:FindFirstChild("LinearVelocity")
         if velObj and (velObj:IsA("BodyVelocity") or velObj:IsA("LinearVelocity")) then
             velObj.Enabled = false
         end
 
-        -- 2. 骨折时强制正常动画：压住跛行，播正常
+        
         local userStates = char:FindFirstChild("UserStates")
         if userStates then
             local broken = userStates:FindFirstChild("BrokenLegs")
@@ -13337,12 +13165,12 @@ function L.antiVelocityEnable()
                 local currentBroken = broken.Value == true
                 local now = osClock()
                 if not currentBroken then
-                    -- 健康时缓存正常动画，每2秒更新一次
+                    
                     if now - (L.antiVelocity.lastNormalSave or 0) > 2.0 then
                         local humN = char:FindFirstChildOfClass("Humanoid")
                         if humN then
                             local snap = L.antiVelocity.snapshotTracks(humN)
-                            -- 过滤掉跛行，只留正常
+                            
                             local filtered = {}
                             for _, s in snap do
                                 local isLimp = ANTI_VELOCITY_FRACTURE_IDS[s.id]
@@ -13375,7 +13203,7 @@ function L.antiVelocityEnable()
                         if animate and animate.Disabled then
                             pcall(function() animate.Disabled = false end)
                         end
-                        -- 打断跛行状态
+                        
                         pcall(function() hum:ChangeState(Enum.HumanoidStateType.Running) end)
                         task.wait(0.3)
                         if not L.antiVelocity.enabled or not char.Parent then return end
@@ -13386,7 +13214,7 @@ function L.antiVelocityEnable()
                         L.antiVelocity.restoreTracks(char, L.antiVelocity.savedNormal)
                     end)
                 end
-                -- 骨折持续期间：每0.3秒压一次跛行 + 补正常动画
+                
                 if currentBroken and L.antiVelocity.wasBroken then
                     if now - (L.antiVelocity.lastFix or 0) > 0.3 then
                         L.antiVelocity.lastFix = now
@@ -13412,7 +13240,7 @@ function L.antiVelocityEnable()
                                 L.antiVelocity.restoreTracks(char, L.antiVelocity.savedNormal)
                             end
                         end
-                        -- 跛行状态机容易卡住，补一次 Running（不 wipe 已播的正常动画，只是解 stuck）
+                        
                         if humChk then
                             pcall(function()
                                 local st = humChk:GetState()
@@ -13428,7 +13256,7 @@ function L.antiVelocityEnable()
                         end
                     end
                 end
-                -- 骨折恢复时重置标记 + 恢复正常动画
+                
                 if not currentBroken and L.antiVelocity.wasBroken then
                     L.antiVelocity.wasBroken = false
                     task.spawn(function()
@@ -13459,7 +13287,7 @@ function L.antiVelocityDisable()
         pcall(function() L.antiVelocity.conn:Disconnect() end)
         L.antiVelocity.conn = nil
     end
-    -- 关闭后回到游戏默认：恢复 Animate 开关，刷新一次状态让游戏自己播跛行/正常
+    
     pcall(function()
         local char = LocalPlayer.Character
         if char then
@@ -13625,8 +13453,8 @@ function L.damageDisplay.queueDamage(dmg)
     table.insert(L.damageDisplay.damageQueue, dmg)
     if not L.damageDisplay.isPlaying then
         L.damageDisplay.isPlaying = true
-        local dmg = table.remove(L.damageDisplay.damageQueue, 1)
-        L.damageDisplay.showDamage(dmg)
+        local nextDamage = table.remove(L.damageDisplay.damageQueue, 1)
+        L.damageDisplay.showDamage(nextDamage)
     end
 end
 
@@ -13733,11 +13561,11 @@ function L.rescueTeammate.loop()
             end
 
             local need = false
-            local why = ""
+            local _why = ""
 
             if L.rescueTeammate.getPin(p) then
                 need = true
-                why = "被扑"
+                _why = "被扑"
             else
                 local cur = L.rescueTeammate.getInf(p)
                 local last = L.rescueTeammate.inf[p.Name] or cur
@@ -13746,7 +13574,7 @@ function L.rescueTeammate.loop()
                     local th = tc and L.rescueTeammate.getHRP(tc)
                     if th and L.rescueTeammate.hasZombie(th.Position, 2) then
                         need = true
-                        why = "感染" .. mathFloor(cur) .. "%"
+                        _why = "感染" .. mathFloor(cur) .. "%"
                     end
                 end
                 L.rescueTeammate.inf[p.Name] = cur
@@ -14083,10 +13911,8 @@ function L.autoHelp.stop()
     end
 end
 
-L.playerHighlights = {}
-L.playerNameTags = {}
-L.playerDots = {}
-L.playerHealthTags = {}
+L.playerESPInstances = {}
+L.playerESPModels = {}
 L.espPlayerEnabled = false
 L.espShowNames = false
 L.espShowHealth = false
@@ -14140,166 +13966,111 @@ function L.getColorsForPlayer(player)
 end
 
 function L.destroyPlayerComponents(player)
-    if L.playerHighlights[player] then
-        L.playerHighlights[player]:Destroy()
-        L.playerHighlights[player] = nil
+    local inst = L.playerESPInstances[player]
+
+    if inst ~= nil then
+        L.destroyESP(inst)
+        L.playerESPInstances[player] = nil
     end
-    if L.playerNameTags[player] then
-        L.playerNameTags[player]:Destroy()
-        L.playerNameTags[player] = nil
+
+    L.playerESPModels[player] = nil
+end
+
+function L.buildPlayerESPName(player, char)
+    local parts = {}
+
+    if L.espShowNames then
+        parts[#parts + 1] = player.Name
     end
-    if L.playerDots[player] then
-        L.playerDots[player]:Destroy()
-        L.playerDots[player] = nil
+
+    if L.espShowHealth then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local percent = hum and mathFloor(hum.Health / hum.MaxHealth * 100) or 100
+        parts[#parts + 1] = percent .. "%"
     end
-    if L.playerHealthTags[player] then
-        L.playerHealthTags[player]:Destroy()
-        L.playerHealthTags[player] = nil
+
+    if L.infectionEnabled then
+        parts[#parts + 1] = strFormat(InterfaceLanguage == "English" and "Infection: %d%%" or "感染: %d%%", L.getInfectionForPlayer(player))
     end
+
+    if L.jobEnabled then
+        parts[#parts + 1] = TranslateText(L.getPlayerClass(player))
+    end
+
+    if #parts == 0 then
+        return ""
+    end
+
+    return table.concat(parts, " | ")
 end
 
 function L.updatePlayerESP(player)
+    local inst = L.playerESPInstances[player]
+
     if not L.espPlayerEnabled then
-        L.destroyPlayerComponents(player)
+        if inst ~= nil then
+            L.destroyESP(inst)
+            L.playerESPInstances[player] = nil
+            L.playerESPModels[player] = nil
+        end
         return
     end
+
     local char = player.Character
+
     if not char or char == LocalPlayer.Character then
-        L.destroyPlayerComponents(player)
+        if inst ~= nil then
+            L.destroyESP(inst)
+            L.playerESPInstances[player] = nil
+            L.playerESPModels[player] = nil
+        end
         return
     end
+
     local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
+
+    if not hrp then
+        return
+    end
+
+    if inst ~= nil and (inst.Deleted or L.playerESPModels[player] ~= char) then
+        L.destroyESP(inst)
+        L.playerESPInstances[player] = nil
+        L.playerESPModels[player] = nil
+        inst = nil
+    end
+
     local colors = L.getColorsForPlayer(player)
+    local label = L.buildPlayerESPName(player, char)
 
-    local myChar = LocalPlayer.Character
-    local myPos = myChar and myChar:FindFirstChild("HumanoidRootPart") and myChar.HumanoidRootPart.Position or v3new()
-    local dist = (hrp.Position - myPos).Magnitude
-    local MAX_DIST = 300
-    local near = dist <= MAX_DIST
+    if inst == nil then
+        inst = L.addESP({
+            Name = label,
+            Model = char,
+            Color = colors.highlight,
+            MaxDistance = 300,
+            TextSize = 14,
+            ESPType = "Highlight",
+            FillColor = colors.highlight,
+            OutlineColor = colors.highlight,
+            FillTransparency = 0.5,
+            OutlineTransparency = 0,
+        })
 
-    if near then
-        if not L.playerHighlights[player] then
-            local hl = Instance.new("Highlight")
-            hl.Adornee = char
-            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-            hl.FillTransparency = 0.3
-            hl.OutlineTransparency = 0.3
-            hl.Parent = char
-            L.playerHighlights[player] = hl
+        if inst == nil then
+            return
         end
-        L.playerHighlights[player].FillColor = colors.highlight
-        L.playerHighlights[player].OutlineColor = colors.highlight
-    else
-        if L.playerHighlights[player] then
-            L.playerHighlights[player]:Destroy()
-            L.playerHighlights[player] = nil
-        end
+
+        L.playerESPInstances[player] = inst
+        L.playerESPModels[player] = char
+        return
     end
 
-
-    if not L.playerDots[player] then
-        local dotGui = Instance.new("BillboardGui")
-        dotGui.Name = "PlayerDot"
-        dotGui.Size = UDim2.new(0, 5, 0, 5)
-        dotGui.StudsOffset = v3new(0, 0, 0)
-        dotGui.AlwaysOnTop = true
-        dotGui.Adornee = hrp
-        dotGui.Parent = char
-        local dotFrame = Instance.new("Frame")
-        dotFrame.Size = UDim2.new(1, 0, 1, 0)
-        dotFrame.BackgroundColor3 = colors.dot
-        dotFrame.BackgroundTransparency = 0
-        dotFrame.BorderSizePixel = 0
-        dotFrame.Parent = dotGui
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(1, 0)
-        corner.Parent = dotFrame
-        L.playerDots[player] = dotGui
-    else
-        local dotGui = L.playerDots[player]
-        if dotGui.Adornee ~= hrp then dotGui.Adornee = hrp end
-        local dotFrame = dotGui:FindFirstChildWhichIsA("Frame")
-        if dotFrame then dotFrame.BackgroundColor3 = colors.dot end
-        if not dotGui.Parent or not dotGui.Parent:IsDescendantOf(char) then dotGui.Parent = char end
-    end
-
-
-    if L.espShowNames then
-        if not L.playerNameTags[player] then
-            local nameGui = Instance.new("BillboardGui")
-            nameGui.Name = "PlayerNameTag"
-            nameGui.Size = UDim2.new(0, 150, 0, 30)
-            nameGui.StudsOffset = v3new(0, -2.5, 0)
-            nameGui.AlwaysOnTop = true
-            nameGui.Adornee = hrp
-            nameGui.Parent = char
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, 0, 1, 0)
-            label.BackgroundTransparency = 1
-            label.Text = player.Name
-            label.TextColor3 = colors.name
-            label.TextSize = 11
-            label.Font = Enum.Font.GothamBold
-            label.TextStrokeTransparency = 0
-            label.TextStrokeColor3 = c3rgb(0, 0, 0)
-            label.Parent = nameGui
-            L.playerNameTags[player] = nameGui
-        else
-            local nameGui = L.playerNameTags[player]
-            if nameGui.Adornee ~= hrp then nameGui.Adornee = hrp end
-            if not nameGui.Parent or not nameGui.Parent:IsDescendantOf(char) then nameGui.Parent = char end
-            local label = nameGui:FindFirstChildOfClass("TextLabel")
-            if label then
-                label.Text = player.Name
-                label.TextColor3 = colors.name
-            end
-        end
-    else
-        if L.playerNameTags[player] then
-            L.playerNameTags[player]:Destroy()
-            L.playerNameTags[player] = nil
-        end
-    end
-
-
-    if L.espShowHealth then
-        if not L.playerHealthTags[player] then
-            local healthGui = Instance.new("BillboardGui")
-            healthGui.Name = "PlayerHealthTag"
-            healthGui.Size = UDim2.new(0, 100, 0, 30)
-            healthGui.StudsOffset = v3new(-2.5, 1.5, 0)
-            healthGui.AlwaysOnTop = true
-            local head = char:FindFirstChild("Head") or hrp
-            healthGui.Adornee = head
-            healthGui.Parent = char
-            local healthLabel = Instance.new("TextLabel")
-            healthLabel.Size = UDim2.new(1, 0, 1, 0)
-            healthLabel.BackgroundTransparency = 1
-            healthLabel.TextSize = 11
-            healthLabel.Font = Enum.Font.GothamBold
-            healthLabel.TextStrokeTransparency = 0
-            healthLabel.TextStrokeColor3 = c3rgb(0, 0, 0)
-            healthLabel.Parent = healthGui
-            L.playerHealthTags[player] = healthGui
-        end
-        local healthGui = L.playerHealthTags[player]
-        local head = char:FindFirstChild("Head") or hrp
-        if healthGui.Adornee ~= head then healthGui.Adornee = head end
-        if not healthGui.Parent or not healthGui.Parent:IsDescendantOf(char) then healthGui.Parent = char end
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        local healthPercent = hum and mathFloor(hum.Health / hum.MaxHealth * 100) or 100
-        local healthLabel = healthGui:FindFirstChildOfClass("TextLabel")
-        if healthLabel then
-            healthLabel.Text = healthPercent .. "%"
-            healthLabel.TextColor3 = colors.name
-        end
-    else
-        if L.playerHealthTags[player] then
-            L.playerHealthTags[player]:Destroy()
-            L.playerHealthTags[player] = nil
-        end
-    end
+    local settings = inst.CurrentSettings
+    settings.Name = label
+    settings.Color = colors.highlight
+    settings.FillColor = colors.highlight
+    settings.OutlineColor = colors.highlight
 end
 
 function L.refreshAllPlayers()
@@ -14352,110 +14123,24 @@ end
 setupPlayerESPEvents()
 
 
-L.infectionBillboards = {}
 L.infectionEnabled = false
 L.infectionUpdateConn = nil
-L.jobBillboards = {}
 L.jobEnabled = false
 L.jobUpdateConn = nil
 
 function L.createInfectionUI(player)
-    if not player or player == LocalPlayer then return nil end
-    local char = player.Character
-    if not char then return nil end
-    local head = char:FindFirstChild("Head")
-    if not head then return nil end
-    if L.infectionBillboards[player] then
-        L.infectionBillboards[player]:Destroy()
-        L.infectionBillboards[player] = nil
-    end
-    local bill = Instance.new("BillboardGui")
-    bill.Name = "PlayerInfectionDisplay"
-    bill.Size = UDim2.new(0, 100, 0, 20)
-    bill.StudsOffset = v3new(-2.5, 0.5, 0)
-    bill.AlwaysOnTop = true
-    bill.MaxDistance = 150
-    bill.Adornee = head
-    bill.Parent = char
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = TranslateText("感染: 0%")
-    label.TextColor3 = c3rgb(255, 200, 0)
-    label.TextSize = 11
-    label.Font = Enum.Font.GothamBold
-    label.TextStrokeTransparency = 0.2
-    label.TextStrokeColor3 = c3rgb(0,0,0)
-    label.Parent = bill
-    L.infectionBillboards[player] = bill
-    return bill
+    return nil
 end
 
 function L.removeInfectionUI(player)
-    local bill = L.infectionBillboards[player]
-    if bill then bill:Destroy() end
-    L.infectionBillboards[player] = nil
 end
 
 function L.updateAllInfection()
-    if not L.infectionEnabled then return end
-    for _, player in Players:GetPlayers() do
-        if player == LocalPlayer then continue end
-        local char = player.Character
-        if not char or not char.Parent then
-            L.removeInfectionUI(player)
-            continue
-        end
-        local head = char:FindFirstChild("Head")
-        if not head then
-            L.removeInfectionUI(player)
-            continue
-        end
-        local bill = L.infectionBillboards[player]
-        if not bill or not bill.Parent then
-            bill = L.createInfectionUI(player)
-        end
-        if bill then
-            local infection = L.getInfectionForPlayer(player)
-            local label = bill:FindFirstChildOfClass("TextLabel")
-            if label then
-                label.Text = strFormat(InterfaceLanguage == "English" and "Infection: %d%%" or "感染: %d%%", infection)
-                if infection >= 70 then
-                    label.TextColor3 = c3rgb(255, 50, 50)
-                elseif infection >= 30 then
-                    label.TextColor3 = c3rgb(255, 200, 0)
-                else
-                    label.TextColor3 = c3rgb(0, 255, 0)
-                end
-            end
-            if bill.Adornee ~= head then bill.Adornee = head end
-        end
-    end
-    for player, _ in L.infectionBillboards do
-        if not player or not player.Parent then L.removeInfectionUI(player) end
-    end
+    L.refreshAllPlayers()
 end
 
 function L.startInfectionUpdating()
-    if L.infectionUpdateConn then return end
-    local acc = 0
-    L.infectionUpdateConn = RunService.RenderStepped:Connect(function(dt)
-        acc = acc + dt
-        if acc >= 0.1 then
-            acc = 0
-            L.updateAllInfection()
-        end
-    end)
-    L.infectionPlayerAddedConn = Players.PlayerAdded:Connect(function(pl)
-        if L.infectionEnabled and pl ~= LocalPlayer then
-            task.wait(0.5)
-            L.createInfectionUI(pl)
-        end
-    end)
-    L.infectionPlayerRemovingConn = Players.PlayerRemoving:Connect(L.removeInfectionUI)
-    for _, pl in Players:GetPlayers() do
-        if pl ~= LocalPlayer then L.createInfectionUI(pl) end
-    end
+    L.refreshAllPlayers()
 end
 
 function L.getInfectionForPlayer(player)
@@ -14535,140 +14220,193 @@ end
 
 
 function L.createJobUI(player)
-    if not player or player == LocalPlayer then return nil end
-    local char = player.Character
-    if not char then return nil end
-    local head = char:FindFirstChild("Head")
-    if not head then return nil end
-    if L.jobBillboards[player] then
-        L.jobBillboards[player]:Destroy()
-        L.jobBillboards[player] = nil
-    end
-    local bill = Instance.new("BillboardGui")
-    bill.Name = "PlayerJobDisplay"
-    bill.Size = UDim2.new(0, 100, 0, 20)
-
-    bill.StudsOffset = v3new(-2.5, -0.5, 0)
-    bill.AlwaysOnTop = true
-    bill.MaxDistance = 150
-    bill.Adornee = head
-    bill.Parent = char
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = TranslateText(L.getPlayerClass(player))
-    label.TextColor3 = c3rgb(180, 0, 255)
-    label.TextSize = 11
-    label.Font = Enum.Font.GothamBold
-    label.TextStrokeTransparency = 0.2
-    label.TextStrokeColor3 = c3rgb(0,0,0)
-    label.Parent = bill
-    L.jobBillboards[player] = bill
-    return bill
+    return nil
 end
 
 
 function L.removeJobUI(player)
-    local bill = L.jobBillboards[player]
-    if bill then bill:Destroy() end
-    L.jobBillboards[player] = nil
 end
 
 
 function L.updateAllJob()
-    if not L.jobEnabled then return end
-    for _, player in Players:GetPlayers() do
-        if player == LocalPlayer then continue end
-        local char = player.Character
-        if not char or not char.Parent then
-            L.removeJobUI(player)
-            continue
-        end
-        local head = char:FindFirstChild("Head")
-        if not head then
-            L.removeJobUI(player)
-            continue
-        end
-        local bill = L.jobBillboards[player]
-        if not bill or not bill.Parent then
-            bill = L.createJobUI(player)
-        end
-        if bill then
-            local label = bill:FindFirstChildOfClass("TextLabel")
-            if label then
-                label.Text = TranslateText(L.getPlayerClass(player))
-            end
-            if bill.Adornee ~= head then bill.Adornee = head end
-        end
-    end
-
-    for player, _ in L.jobBillboards do
-        if not player or not player.Parent then L.removeJobUI(player) end
-    end
+    L.refreshAllPlayers()
 end
 
 
 function L.startJobUpdating()
-    if L.jobUpdateConn then return end
     L.jobEnabled = true
-    local acc = 0
-    L.jobUpdateConn = RunService.RenderStepped:Connect(function(dt)
-        acc = acc + dt
-        if acc >= 0.1 then
-            acc = 0
-            L.updateAllJob()
-        end
-    end)
-    L.jobPlayerAddedConn = Players.PlayerAdded:Connect(function(pl)
-        if L.jobEnabled and pl ~= LocalPlayer then
-            task.wait(0.5)
-            L.createJobUI(pl)
-        end
-    end)
-    L.jobPlayerRemovingConn = Players.PlayerRemoving:Connect(L.removeJobUI)
-    for _, pl in Players:GetPlayers() do
-        if pl ~= LocalPlayer then L.createJobUI(pl) end
-    end
+    L.refreshAllPlayers()
 end
 
 
 function L.stopJobUpdating()
     L.jobEnabled = false
-    if L.jobUpdateConn then
-        L.jobUpdateConn:Disconnect()
-        L.jobUpdateConn = nil
-    end
-    if L.jobPlayerAddedConn then
-        L.jobPlayerAddedConn:Disconnect()
-        L.jobPlayerAddedConn = nil
-    end
-    if L.jobPlayerRemovingConn then
-        L.jobPlayerRemovingConn:Disconnect()
-        L.jobPlayerRemovingConn = nil
-    end
-    for _, bill in L.jobBillboards do
-        if bill then bill:Destroy() end
-    end
-    L.jobBillboards = {}
+    L.refreshAllPlayers()
 end
 
 function L.stopInfectionUpdating()
-    if L.infectionUpdateConn then
-        L.infectionUpdateConn:Disconnect()
-        L.infectionUpdateConn = nil
+    L.refreshAllPlayers()
+end
+
+
+L.boomDraw = L.boomDraw or {}
+L.boomDraw.enabled = false
+L.boomDraw.markers = {}
+L.boomDraw.zombieConns = {}
+L.boomDraw.connection = nil
+L.boomDraw.zombieAddedDisposer = nil
+
+function L.boomDraw.unwatchZombie(zombie)
+    local conns = L.boomDraw.zombieConns[zombie]
+    if conns then
+        for _, c in conns do
+            pcall(function() c:Disconnect() end)
+        end
+        L.boomDraw.zombieConns[zombie] = nil
     end
-    if L.infectionPlayerAddedConn then
-        L.infectionPlayerAddedConn:Disconnect()
-        L.infectionPlayerAddedConn = nil
+end
+
+function L.boomDraw.addMarker(zombie)
+    if L.boomDraw.markers[zombie] then return end
+    if not zombie:IsA("Model") then return end
+
+    local esp = L.addESP({
+        Name = "3.50",
+        Model = zombie,
+        Color = c3rgb(255, 200, 0),
+        MaxDistance = 1000,
+        TextSize = 20,
+        ESPType = "Text",
+    })
+
+    if esp == nil then return end
+
+    L.boomDraw.markers[zombie] = { esp = esp, start = tick_() }
+end
+
+function L.boomDraw.removeMarker(zombie)
+    local m = L.boomDraw.markers[zombie]
+
+    if m then
+        L.destroyESP(m.esp)
+        L.boomDraw.markers[zombie] = nil
     end
-    if L.infectionPlayerRemovingConn then
-        L.infectionPlayerRemovingConn:Disconnect()
-        L.infectionPlayerRemovingConn = nil
+
+    L.boomDraw.unwatchZombie(zombie)
+end
+
+function L.boomDraw.clearAllMarkers()
+    for zombie, m in L.boomDraw.markers do
+        L.destroyESP(m.esp)
+        L.boomDraw.markers[zombie] = nil
     end
-    for _, bill in L.infectionBillboards do
-        if bill then bill:Destroy() end
+
+    L.boomDraw.markers = {}
+
+    for zombie in L.boomDraw.zombieConns do
+        L.boomDraw.unwatchZombie(zombie)
     end
-    L.infectionBillboards = {}
+end
+
+function L.boomDraw.watchZombie(zombie)
+    if not zombie:IsA("Model") then return end
+    if L.boomDraw.zombieConns[zombie] then return end
+    local state = zombie:FindFirstChild("State")
+    if not state then
+        local waited = 0
+        while not state and waited < 5 do
+            task.wait(0.25)
+            waited = waited + 0.25
+            state = zombie:FindFirstChild("State")
+        end
+        if not state then return end
+    end
+    if not L.boomDraw.enabled or L.boomDraw.zombieConns[zombie] then return end
+
+    local conns = {}
+    conns[#conns + 1] = state.ChildAdded:Connect(function(c)
+        if c.Name == "Lit" and c:IsA("BoolValue") and L.boomDraw.enabled then
+            L.boomDraw.addMarker(zombie)
+        end
+    end)
+    conns[#conns + 1] = state.ChildRemoved:Connect(function(c)
+        if c.Name == "Lit" then
+            L.boomDraw.removeMarker(zombie)
+        end
+    end)
+    L.boomDraw.zombieConns[zombie] = conns
+
+    local lit = state:FindFirstChild("Lit")
+    if lit and L.boomDraw.enabled then
+        L.boomDraw.addMarker(zombie)
+    end
+end
+
+function L.boomDraw.setupWatchers()
+    L.ZombieWatch.start()
+    local zf = workspace:FindFirstChild("Zombies")
+
+    local function tryWatch(z)
+        if zf and z.Parent ~= zf then return end
+        task.spawn(L.boomDraw.watchZombie, z)
+    end
+
+    L.ZombieWatch.forEach(tryWatch)
+    if not L.boomDraw.zombieAddedDisposer then
+        L.boomDraw.zombieAddedDisposer = L.ZombieWatch.onAdded(tryWatch)
+    end
+end
+
+function L.boomDraw.start()
+    if L.boomDraw.enabled then return end
+    L.boomDraw.enabled = true
+
+    L.boomDraw.clearAllMarkers()
+    L.boomDraw.setupWatchers()
+
+    if L.boomDraw.connection then L.boomDraw.connection:Disconnect() end
+    L.boomDraw.connection = RunService.RenderStepped:Connect(function()
+        if not L.boomDraw.enabled then return end
+
+        for zombie, m in L.boomDraw.markers do
+            if not zombie or not zombie.Parent then
+                L.boomDraw.removeMarker(zombie)
+                continue
+            end
+
+            if m.esp == nil or m.esp.Deleted then
+                L.boomDraw.removeMarker(zombie)
+                continue
+            end
+
+            local elapsed = tick_() - m.start
+            local remain = 3.5 - elapsed
+
+            if remain <= 0 then
+                L.boomDraw.removeMarker(zombie)
+                continue
+            end
+
+            local settings = m.esp.CurrentSettings
+            settings.Name = strFormat("%.2f", remain)
+
+            local r = remain / 4
+            settings.Color = c3rgb(255, mathFloor(200 * r), 0)
+        end
+    end)
+end
+
+function L.boomDraw.stop()
+    L.boomDraw.enabled = false
+    if L.boomDraw.connection then
+        L.boomDraw.connection:Disconnect()
+        L.boomDraw.connection = nil
+    end
+    if L.boomDraw.zombieAddedDisposer then
+        L.boomDraw.zombieAddedDisposer()
+        L.boomDraw.zombieAddedDisposer = nil
+    end
+    L.boomDraw.clearAllMarkers()
 end
 
 L.bulletDisplay = { enabled = false, billboardGui = nil, screenGui = nil, billLabel = nil, screenLabel = nil, connection = nil, cameraConn = nil }
@@ -14906,49 +14644,56 @@ end
 
 L.cannonSupplies = { enabled = false, highlights = {} }
 
+function L.cannonSupplies.createHighlightForPart(part, label)
+    local esp = L.addESP({
+        Name = label,
+        Model = part,
+        Color = c3rgb(0, 255, 255),
+        MaxDistance = 1000,
+        TextSize = 14,
+        ESPType = "Highlight",
+        FillColor = c3rgb(0, 255, 255),
+        OutlineColor = c3rgb(255, 255, 255),
+        FillTransparency = 0.5,
+        OutlineTransparency = 0.3,
+    })
+
+    if esp ~= nil then
+        table.insert(L.cannonSupplies.highlights, esp)
+    end
+end
+
 function L.cannonSupplies.createHighlights()
     L.cannonSupplies.removeHighlights()
-    local supplies = workspace:FindFirstChild("Vardohus Fortress")
-    if supplies then
-        supplies = supplies:FindFirstChild("Modes")
-        if supplies then
-            supplies = supplies:FindFirstChild("Objective")
-            if supplies then
-                supplies = supplies:FindFirstChild("CannonSupplies")
-            end
-        end
-    end
+
+    local root = workspace:FindFirstChild("Vardohus Fortress")
+    local modes = root and root:FindFirstChild("Modes")
+    local objective = modes and modes:FindFirstChild("Objective")
+    local supplies = objective and objective:FindFirstChild("CannonSupplies")
+
     if not supplies then return end
+
     for _, folder in supplies:GetChildren() do
         if folder:IsA("Folder") then
             local swab = folder:FindFirstChild("Swab")
             local roundshot = folder:FindFirstChild("12 lb. Roundshots")
+
             if swab then
-                local hl = Instance.new("Highlight")
-                hl.FillColor = c3rgb(0, 255, 255)
-                hl.OutlineColor = c3rgb(255, 255, 255)
-                hl.FillTransparency = 0.5
-                hl.OutlineTransparency = 0.3
-                hl.Parent = swab
-                table.insert(L.cannonSupplies.highlights, hl)
+                L.cannonSupplies.createHighlightForPart(swab, "Swab")
             end
+
             if roundshot then
-                local hl = Instance.new("Highlight")
-                hl.FillColor = c3rgb(0, 255, 255)
-                hl.OutlineColor = c3rgb(255, 255, 255)
-                hl.FillTransparency = 0.5
-                hl.OutlineTransparency = 0.3
-                hl.Parent = roundshot
-                table.insert(L.cannonSupplies.highlights, hl)
+                L.cannonSupplies.createHighlightForPart(roundshot, "12 lb. Roundshots")
             end
         end
     end
 end
 
 function L.cannonSupplies.removeHighlights()
-    for _, hl in L.cannonSupplies.highlights do
-        if hl and hl.Parent then hl:Destroy() end
+    for _, esp in L.cannonSupplies.highlights do
+        L.destroyESP(esp)
     end
+
     L.cannonSupplies.highlights = {}
 end
 
@@ -15800,31 +15545,25 @@ function L.clearHeadlessHighlights()
         if hl and hl.Parent then hl:Destroy() end
     end
     L.headlessHighlights = {}
-
     for model, tag in L.headlessTags do
         if tag and tag.Parent then tag:Destroy() end
     end
     L.headlessTags = {}
 end
 
-
 function L.isHeadlessModel(model)
     if not model or not model:IsA("Model") then return false end
     local name = model.Name
-
     if name == "HeadlessHorseman" then return true end
     if name:find("Horse") or name:find("Steed") or name:find("Mount") then
-
         local parent = model.Parent
         if parent and parent:IsA("Model") and parent.Name == "HeadlessHorseman" then
             return true
         end
-
         if name:find("Headless") then return true end
     end
     return false
 end
-
 
 function L.getAttachPart(model)
     return model.PrimaryPart
@@ -15838,7 +15577,6 @@ function L.createHeadlessHighlight(model)
     if not L.isHeadlessModel(model) then return end
     if L.headlessHighlights[model] then return end
 
-
     local hl = Instance.new("Highlight")
     hl.FillColor = c3rgb(255, 50, 50)
     hl.OutlineColor = c3rgb(255, 50, 50)
@@ -15850,32 +15588,31 @@ function L.createHeadlessHighlight(model)
 
     L.headlessHighlights[model] = hl
 
-
     if model.Name == "HeadlessHorseman" or model.Name:find("Headless") then
         local attachPart = L.getAttachPart(model)
-        if not attachPart then return end
+        if attachPart then
+            local tag = Instance.new("BillboardGui")
+            tag.Name = "HeadlessTag"
+            tag.Size = UDim2.new(0, 120, 0, 30)
+            tag.StudsOffset = v3new(0, 2.5, 0)
+            tag.AlwaysOnTop = true
+            tag.Adornee = attachPart
+            tag.Parent = model
 
-        local tag = Instance.new("BillboardGui")
-        tag.Name = "HeadlessTag"
-        tag.Size = UDim2.new(0, 120, 0, 30)
-        tag.StudsOffset = v3new(0, 2.5, 0)
-        tag.AlwaysOnTop = true
-        tag.Adornee = attachPart
-        tag.Parent = model
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = TranslateText("无头骑士")
+            label.TextColor3 = c3rgb(255, 50, 50)
+            label.TextTransparency = 0.3
+            label.Font = Enum.Font.GothamBold
+            label.TextSize = 14
+            label.TextStrokeTransparency = 0.5
+            label.TextStrokeColor3 = c3rgb(0, 0, 0)
+            label.Parent = tag
 
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 1, 0)
-        label.BackgroundTransparency = 1
-        label.Text = TranslateText("无头骑士")
-        label.TextColor3 = c3rgb(255, 50, 50)
-        label.TextTransparency = 0.3
-        label.Font = Enum.Font.GothamBold
-        label.TextSize = 14
-        label.TextStrokeTransparency = 0.5
-        label.TextStrokeColor3 = c3rgb(0, 0, 0)
-        label.Parent = tag
-
-        L.headlessTags[model] = tag
+            L.headlessTags[model] = tag
+        end
     end
 end
 
@@ -15884,7 +15621,6 @@ function L.updateHeadlessHighlights()
         L.clearHeadlessHighlights()
         return
     end
-
 
     for model, hl in L.headlessHighlights do
         if not model.Parent then
@@ -15898,7 +15634,6 @@ function L.updateHeadlessHighlights()
             L.headlessTags[model] = nil
         end
     end
-
 
     for _, obj in workspace:GetDescendants() do
         if obj:IsA("Model") and L.isHeadlessModel(obj) then
@@ -15976,28 +15711,28 @@ function L.createDraculaHighlight(model)
     L.draculaHighlights[model] = hl
 
     local attachPart = model.PrimaryPart or model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Head")
-    if not attachPart then return end
+    if attachPart then
+        local tag = Instance.new("BillboardGui")
+        tag.Name = "DraculaTag"
+        tag.Size = UDim2.new(0, 120, 0, 30)
+        tag.StudsOffset = v3new(0, 3, 0)
+        tag.AlwaysOnTop = true
+        tag.Adornee = attachPart
+        tag.Parent = model
 
-    local tag = Instance.new("BillboardGui")
-    tag.Name = "DraculaTag"
-    tag.Size = UDim2.new(0, 120, 0, 30)
-    tag.StudsOffset = v3new(0, 3, 0)
-    tag.AlwaysOnTop = true
-    tag.Adornee = attachPart
-    tag.Parent = model
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = TranslateText("德古拉")
-    label.TextColor3 = c3rgb(255, 50, 50)
-    label.TextTransparency = 0.3
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 14
-    label.TextStrokeTransparency = 0.5
-    label.TextStrokeColor3 = c3rgb(0, 0, 0)
-    label.Parent = tag
-    L.draculaTags[model] = tag
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = TranslateText("德古拉")
+        label.TextColor3 = c3rgb(255, 50, 50)
+        label.TextTransparency = 0.3
+        label.Font = Enum.Font.GothamBold
+        label.TextSize = 14
+        label.TextStrokeTransparency = 0.5
+        label.TextStrokeColor3 = c3rgb(0, 0, 0)
+        label.Parent = tag
+        L.draculaTags[model] = tag
+    end
 end
 
 function L.updateDraculaHighlight()
@@ -16005,7 +15740,6 @@ function L.updateDraculaHighlight()
         L.clearDraculaHighlights()
         return
     end
-
 
     for model, hl in L.draculaHighlights do
         if not model.Parent then
@@ -16064,7 +15798,6 @@ L.zombieEspEnabled = {
 L.zombieEffects = {}
 
 function L.getZombieTypeKey(zombie)
-
     for typeKey, config in L.ZOMBIE_TYPES do
         if config.part and zombie:FindFirstChild(config.part) then
             return typeKey
@@ -16086,27 +15819,37 @@ end
 
 function L.createTag(zombie, typeKey)
     local config = L.ZOMBIE_TYPES[typeKey]
-    if not config then return nil end
-    local attachPart = zombie.PrimaryPart or zombie:FindFirstChild("Head") or zombie:FindFirstChild("HumanoidRootPart")
-    if not attachPart then return nil end
+    if not config then return nil, nil end
+
+    local attachPart = zombie:FindFirstChild("HumanoidRootPart")
+        or zombie:FindFirstChild("Torso")
+        or zombie:FindFirstChild("UpperTorso")
+        or zombie:FindFirstChild("Head")
+    if not attachPart then return nil, nil end
+
     local tag = Instance.new("BillboardGui")
-    tag.Size = UDim2.new(0, 120, 0, 30)
-    tag.StudsOffset = v3new(0, 2.5, 0)
+    tag.Size = UDim2.new(0, 200, 0, 50)
+    tag.StudsOffset = v3new(0, 0, 0)
     tag.AlwaysOnTop = true
     tag.Adornee = attachPart
     tag.Parent = zombie
+
     local label = Instance.new("TextLabel")
-    label.Text = config.name
-    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Size = UDim2.new(0, 200, 0, 50)
     label.BackgroundTransparency = 1
+    label.Text = config.name
     label.TextColor3 = config.highlightColor
     label.TextTransparency = 0.3
+    label.TextWrap = true
+    label.TextWrapped = true
+    label.RichText = true
     label.Font = Enum.Font.GothamBold
     label.TextSize = 14
     label.TextStrokeTransparency = 0.5
     label.TextStrokeColor3 = c3rgb(0, 0, 0)
     label.Parent = tag
-    return tag
+
+    return tag, label
 end
 
 function L.createHighlight(zombie, color)
@@ -16131,7 +15874,7 @@ function L.removeZombieEffects(zombie)
 end
 
 function L.clearAllZombieEffects()
-    for zombie, _ in L.zombieEffects do
+    for zombie in L.zombieEffects do
         L.removeZombieEffects(zombie)
     end
 end
@@ -16154,12 +15897,17 @@ function L.updateZombieESP()
         return
     end
 
-    for zombie, _ in L.zombieEffects do
+    local camera = workspace.CurrentCamera
+    if not camera then
+        L.clearAllZombieEffects()
+        return
+    end
+
+    for zombie in L.zombieEffects do
         if not zombie.Parent then
             L.removeZombieEffects(zombie)
         end
     end
-
 
     local zombieModels = {}
     local cameraFolder = workspace:FindFirstChild("Camera")
@@ -16186,12 +15934,20 @@ function L.updateZombieESP()
             local typeKey = L.getZombieTypeKey(zombie)
             local enabled = L.zombieEspEnabled[typeKey]
 
-            if enabled and dist <= L.ZOMBIE_ESP_RANGE then
+            local _, onScreen = camera:WorldToViewportPoint(root.Position)
+
+            if enabled and dist <= L.ZOMBIE_ESP_RANGE and onScreen then
                 if not L.zombieEffects[zombie] then
                     local config = L.ZOMBIE_TYPES[typeKey]
-                    local tag = L.createTag(zombie, typeKey)
+                    local tag, label = L.createTag(zombie, typeKey)
                     local highlight = L.createHighlight(zombie, config.highlightColor)
-                    L.zombieEffects[zombie] = { tag = tag, highlight = highlight, typeKey = typeKey }
+                    L.zombieEffects[zombie] = {
+                        tag = tag,
+                        label = label,
+                        highlight = highlight,
+                        typeKey = typeKey,
+                        displayName = config.name,
+                    }
                 end
             else
                 if L.zombieEffects[zombie] then
@@ -16202,7 +15958,36 @@ function L.updateZombieESP()
     end
 end
 
+function L.updateZombieLabels()
+    local char = LocalPlayer.Character
+    local myRoot = char and char:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+    local myPos = myRoot.Position
+
+    for zombie, effects in L.zombieEffects do
+        if not zombie.Parent then continue end
+        local hrp = zombie:FindFirstChild("HumanoidRootPart")
+            or zombie:FindFirstChild("Torso")
+            or zombie:FindFirstChild("Head")
+        if not hrp then continue end
+
+        if effects.label then
+            local dist = (hrp.Position - myPos).Magnitude
+            local text = strFormat(
+                '%s\n<font size="%d">[%d]</font>',
+                effects.displayName,
+                11,
+                mathFloor(dist)
+            )
+            if effects.label.Text ~= text then
+                effects.label.Text = text
+            end
+        end
+    end
+end
+
 L.lastZombieESPUpdate = 0
+L.lastZombieLabelUpdate = 0
 L.zombieESPHeartbeatConn = nil
 
 function L.startZombieESPHeartbeat()
@@ -16212,6 +15997,10 @@ function L.startZombieESPHeartbeat()
         if now - L.lastZombieESPUpdate >= 0.2 then
             L.lastZombieESPUpdate = now
             L.updateZombieESP()
+        end
+        if now - L.lastZombieLabelUpdate >= 0.05 then
+            L.lastZombieLabelUpdate = now
+            L.updateZombieLabels()
         end
     end)
 end
@@ -16228,9 +16017,6 @@ L.onCharacterAdded(function()
     task.wait(0.5)
     L.updateZombieESP()
 end)
-
-
-
 
 L.CoordSpeed = { Enabled = false, Speed = 16, Connection = nil }
 
@@ -16807,6 +16593,7 @@ L.attackAngle = 180
 L.showRangeVisuals = false
 L.INNER_RING_FIXED_RADIUS = 13
 
+
 L.smartAura = {
     enabled = false,
     auraClosed = false,
@@ -16826,6 +16613,7 @@ L.currentAttackTargets = {}
 L.indicatorData = {}
 L.indicatorUpdateConn = nil
 
+
 function L.isHoldingMelee()
     local char = LocalPlayer.Character
     if not char then return false end
@@ -16843,6 +16631,7 @@ function L.isHoldingMelee()
     return false
 end
 
+
 function L.getNearestNonBarrelZombie()
     local char = LocalPlayer.Character
     if not char then return nil end
@@ -16857,10 +16646,8 @@ function L.getNearestNonBarrelZombie()
     for _, z in folder:GetChildren() do
         if z:IsA("Model") and z:FindFirstChild("HumanoidRootPart") then
             if z:GetAttribute("Type") == "Barrel" or z:FindFirstChild("Barrel") then continue end
-            if L.skipSpawningEnabled then
-                local state = z:FindFirstChild("State")
-                if state and tostring(state.Value) == "Spawn" then continue end
-            end
+            local state = z:FindFirstChild("State")
+            if state and tostring(state.Value) == "Spawn" then continue end
             local zPos = z.HumanoidRootPart.Position
             local dist = (zPos - pos).Magnitude
             if dist <= range and dist < bestDist then
@@ -16871,6 +16658,7 @@ function L.getNearestNonBarrelZombie()
     end
     return best
 end
+
 
 function L.getZombiesInRadius(radius)
     local char = LocalPlayer.Character
@@ -16884,10 +16672,8 @@ function L.getZombiesInRadius(radius)
     local result = {}
     for _, z in folder:GetChildren() do
         if z:IsA("Model") and z:FindFirstChild("HumanoidRootPart") then
-            if L.skipSpawningEnabled then
-                local state = z:FindFirstChild("State")
-                if state and tostring(state.Value) == "Spawn" then continue end
-            end
+            local state = z:FindFirstChild("State")
+            if state and tostring(state.Value) == "Spawn" then continue end
             local zPos = z.HumanoidRootPart.Position
             local dist = (zPos - pos).Magnitude
             if dist <= radius then
@@ -16897,6 +16683,7 @@ function L.getZombiesInRadius(radius)
     end
     return result
 end
+
 
 function L.fireMeleeHit(remote, isBayonet, zombie, HitPos, Direction)
     if not remote or not zombie or not zombie.Parent then return end
@@ -16914,6 +16701,7 @@ function L.fireMeleeHit(remote, isBayonet, zombie, HitPos, Direction)
         remote:FireServer("HitZombieM", zombie, HitPos, true, HitPos, "Head", Direction)
     end
 end
+
 
 function L.sendSingleAttack(zombie)
     if not zombie or not zombie.Parent then return false end
@@ -16946,6 +16734,7 @@ function L.sendSingleAttack(zombie)
     return true
 end
 
+
 function L.getCurrentKills()
     local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
     if leaderstats then
@@ -16957,18 +16746,17 @@ function L.getCurrentKills()
     return 0
 end
 
+
 function L.updateSmartAura()
     if not L.smartAura.enabled then return end
+
 
     if not L.isHoldingMelee() then
         if L.smartAura.auraClosed then
             L.smartAura.auraClosed = false
             L.smartAura.probeMode = false
             L.smartAura.innerEntryKills = {}
-            if not L.auraEnabled and not L.trackerAura.enabled then
-                if auraMode == "常规" then L.startAura()
-                elseif auraMode == "追踪" then L.trackerAura.start() end
-            end
+            if not L.auraEnabled then L.startAura() end
         end
         return
     end
@@ -17004,7 +16792,6 @@ function L.updateSmartAura()
                             L.smartAura.retryTimer = 0
                             L.smartAura.innerEntryKills = {}
                             if L.auraEnabled then L.stopAura() end
-                            if L.trackerAura.enabled then L.trackerAura.suspend = true end
                             break
                         else
                             L.smartAura.innerEntryKills[z] = nil
@@ -17020,6 +16807,7 @@ function L.updateSmartAura()
         return
     end
 
+
     if L.smartAura.probeMode then
         if now - L.smartAura.retryTimer >= L.smartAura.retryInterval then
             L.smartAura.retryTimer = now
@@ -17033,20 +16821,12 @@ function L.updateSmartAura()
                     L.smartAura.auraClosed = false
                     L.smartAura.probeMode = false
                     L.smartAura.innerEntryKills = {}
-                    L.trackerAura.suspend = false
-                    if not L.auraEnabled and not L.trackerAura.enabled then
-                        if auraMode == "常规" then L.startAura()
-                        elseif auraMode == "追踪" then L.trackerAura.start() end
-                    end
+                    if not L.auraEnabled then L.startAura() end
                 end
             else
                 L.smartAura.auraClosed = false
                 L.smartAura.probeMode = false
-                L.trackerAura.suspend = false
-                if not L.auraEnabled and not L.trackerAura.enabled then
-                    if auraMode == "常规" then L.startAura()
-                    elseif auraMode == "追踪" then L.trackerAura.start() end
-                end
+                if not L.auraEnabled then L.startAura() end
             end
         end
     end
@@ -17073,6 +16853,7 @@ function L.stopSmartAuraThread()
     L.smartAura.innerEntryKills = {}
     L.smartAura.retryTimer = 0
 end
+
 
 L.attackLoop = function()
     while L.auraEnabled do
@@ -17135,6 +16916,7 @@ L.stopAura = function()
     end
     L.currentAttackTargets = {}
 end
+
 
 L.rangeVisuals = {
     outerRingParts = {},
@@ -17372,6 +17154,7 @@ function L.updateRangeVisuals()
     local outerRotOffset = t * outerRotSpeed
     local innerRotOffset = t * innerRotSpeed + 0.8
 
+
     local outerParts = L.rangeVisuals.outerRingParts
     local outerNum = #outerParts
     local outerTransparency = hasOuter and 0.08 or 0.15
@@ -17391,6 +17174,7 @@ function L.updateRangeVisuals()
             beamData.beam.Color = outerColorSeq
         end
     end
+
 
     local innerParts = L.rangeVisuals.innerRingParts
     local innerNum = #innerParts
@@ -17426,6 +17210,7 @@ function L.updateRangeVisuals()
             beamData.beam.Enabled = false
         end
     end
+
 
     local showRays = angle < 360
     if showRays ~= L.rangeVisuals.lastShowRays then
@@ -17479,10 +17264,10 @@ function L.startRangeVisuals()
     L.createRangeVisuals()
     if L.rangeVisuals.updateConn then L.rangeVisuals.updateConn:Disconnect() end
     L.rangeVisuals.updateConn = RunService.RenderStepped:Connect(function()
-        if L.rangeVisuals.active and (L.showRangeVisuals or auraMasterEnabled) then
-            L.updateRangeVisuals()
-        end
-    end)
+    if L.rangeVisuals.active and (L.showRangeVisuals or auraMasterEnabled) then
+        L.updateRangeVisuals()
+    end
+end)
 
     if L.rangeVisuals.charAddedConn then L.rangeVisuals.charAddedConn:Disconnect() end
 
@@ -17548,6 +17333,7 @@ function L.stopRangeVisuals()
     end
     L.clearRangeVisuals()
 end
+
 
 function L.createIndicator(zombie)
     if not zombie or not zombie.Parent then return nil end
@@ -17982,389 +17768,6 @@ function L.buildAttackTargets()
     return attackList
 end
 
-local auraMode = "常规"
-
-L.trackerAura = {
-    enabled = false,
-    suspend = false,
-    wallCheck = false,
-    isInternal = false,
-    fakeOffset = v3new(0, 0, 0),
-    savedCF = nil,
-    savedVel = nil,
-    originalIndex = nil,
-    camBindName = nil,
-    heartbeatConn = nil,
-    attackThread = nil,
-    KEEP_DISTANCE = 5,
-    BOMBER_SAFE_DIST = 15,
-}
-
-function L.trackerAura.findNearestZombie(myPos)
-    local nearestZombie, nearestRoot, nearestDist = nil, nil, L.displayRange
-    local folder = workspace:FindFirstChild("Zombies")
-    if not folder then return nil, nil end
-
-    local bomberPositions = {}
-    for _, z in folder:GetChildren() do
-        if z:IsA("Model") then
-            local isBarrel = z:GetAttribute("Type") == "Barrel" or z:FindFirstChild("Barrel") ~= nil
-            if isBarrel then
-                local zr = z:FindFirstChild("HumanoidRootPart") or z:FindFirstChild("Torso") or z:FindFirstChild("Head")
-                if zr then table.insert(bomberPositions, zr.Position) end
-            end
-        end
-    end
-
-    for _, z in folder:GetChildren() do
-        if z:IsA("Model") then
-            local skipThis = false
-            if L.skipSpawningEnabled then
-                local state = z:FindFirstChild("State")
-                if state and tostring(state.Value) == "Spawn" then
-                    skipThis = true
-                end
-            end
-            if not skipThis then
-                local isBarrel = z:GetAttribute("Type") == "Barrel" or z:FindFirstChild("Barrel") ~= nil
-                if not (isBarrel and not L.attackBarrelEnabled) then
-                    local zRoot = z:FindFirstChild("HumanoidRootPart") or z:FindFirstChild("Torso") or z:FindFirstChild("Head")
-                    if zRoot then
-                        local dist = (zRoot.Position - myPos).Magnitude
-                        if dist <= nearestDist then
-                            local safe = true
-                            if not isBarrel then
-                                for _, bpos in bomberPositions do
-                                    if (zRoot.Position - bpos).Magnitude <= L.trackerAura.BOMBER_SAFE_DIST then
-                                        safe = false
-                                        break
-                                    end
-                                end
-                            end
-                            if safe and L.trackerAura.wallCheck then
-                                local params = RaycastParams.new()
-                                params.FilterType = Enum.RaycastFilterType.Exclude
-                                local ignoreList = {}
-                                for _, pl in Players:GetPlayers() do
-                                    if pl.Character then table.insert(ignoreList, pl.Character) end
-                                end
-                                params.FilterDescendantsInstances = ignoreList
-                                local result = workspace:Raycast(myPos, zRoot.Position - myPos, params)
-                                if result then safe = false end
-                            end
-                            if safe then
-                                nearestDist = dist
-                                nearestZombie = z
-                                nearestRoot = zRoot
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return nearestZombie, nearestRoot
-end
-
-function L.trackerAura.onHeartbeat()
-    if not L.trackerAura.enabled or L.trackerAura.suspend then
-        L.trackerAura.fakeOffset = v3new(0, 0, 0)
-        return
-    end
-    local char = LocalPlayer.Character
-    if not char then
-        L.trackerAura.fakeOffset = v3new(0, 0, 0)
-        return
-    end
-    local i = char:FindFirstChild("HumanoidRootPart")
-    if not i then
-        L.trackerAura.fakeOffset = v3new(0, 0, 0)
-        return
-    end
-
-    L.trackerAura.isInternal = true
-    local realCF = i.CFrame
-    local realVel = i.AssemblyLinearVelocity
-    L.trackerAura.isInternal = false
-
-    local myPos = realCF.Position
-    local zombie, root = L.trackerAura.findNearestZombie(myPos)
-
-    if root then
-        local zombiePos = root.Position
-        local dir = myPos - zombiePos
-        if dir.Magnitude < 0.01 then
-            dir = v3new(0, 0, -1)
-        else
-            dir = dir.Unit
-        end
-        local targetPos = zombiePos + dir * L.trackerAura.KEEP_DISTANCE
-        L.trackerAura.fakeOffset = targetPos - myPos
-    else
-        L.trackerAura.fakeOffset = v3new(0, 0, 0)
-    end
-
-    L.trackerAura.savedCF = realCF
-    L.trackerAura.savedVel = realVel
-
-    L.trackerAura.isInternal = true
-    i.CFrame = realCF + L.trackerAura.fakeOffset
-    i.AssemblyLinearVelocity = v3new(0, 0, 0)
-    L.trackerAura.isInternal = false
-
-    RunService.RenderStepped:Wait()
-
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        L.trackerAura.isInternal = true
-        LocalPlayer.Character.HumanoidRootPart.CFrame = realCF
-        LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = realVel
-        L.trackerAura.isInternal = false
-    end
-end
-
-function L.trackerAura.attackLoop()
-    while L.trackerAura.enabled do
-        if L.smartAura.enabled and L.smartAura.auraClosed then
-            task.wait(0.1)
-            continue
-        end
-
-        local weapon = L.getHeldMelee()
-        if not weapon then
-            L.currentAttackTargets = {}
-            task.wait(0.1)
-            continue
-        end
-
-        local char = LocalPlayer.Character
-        if not char then
-            L.currentAttackTargets = {}
-            task.wait(0.1)
-            continue
-        end
-        local myRoot = char:FindFirstChild("HumanoidRootPart")
-        if not myRoot then
-            L.currentAttackTargets = {}
-            task.wait(0.1)
-            continue
-        end
-
-        L.trackerAura.isInternal = true
-        local myPos = myRoot.Position
-        L.trackerAura.isInternal = false
-
-        local zombie = L.trackerAura.findNearestZombie(myPos)
-        if zombie then
-            local name = weapon.Name:lower()
-            local isBayonet = name:find("musket") or name:find("flintlock") or name:find("bayonet")
-            local remote = weapon:FindFirstChild("RemoteEvent")
-            if remote then
-                local head = zombie:FindFirstChild("Head")
-                if head then
-                    local headPart = char:FindFirstChild("Head")
-                    local HitPos = head.Position
-                    local Direction = headPart and (HitPos - headPart.Position).Unit or v3new(0, 1, 0)
-                    pcall(function()
-                        L.fireMeleeHit(remote, isBayonet, zombie, HitPos, Direction)
-                    end)
-                end
-            end
-            L.currentAttackTargets = {zombie}
-        else
-            L.currentAttackTargets = {}
-        end
-        task.wait(0.05)
-    end
-    L.currentAttackTargets = {}
-end
-
-function L.trackerAura.installHook()
-    if L.trackerAura.originalIndex then return end
-    if type(hookmetamethod) ~= "function" then return end
-    L.trackerAura.originalIndex = hookmetamethod(game, "__index", newcclosure(function(self, l)
-        if L.trackerAura.enabled and not L.trackerAura.suspend and not L.trackerAura.isInternal then
-            if not checkcaller() then
-                if l == "CFrame"
-                    and LocalPlayer.Character
-                    and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    and LocalPlayer.Character:FindFirstChild("Humanoid")
-                    and LocalPlayer.Character:FindFirstChild("Humanoid").Health > 0 then
-                    if self == LocalPlayer.Character.HumanoidRootPart then
-                        return (L.trackerAura.savedCF or CFrame.new()) + L.trackerAura.fakeOffset
-                    elseif self == LocalPlayer.Character.Head then
-                        local m = L.trackerAura.savedCF or CFrame.new()
-                        return m + L.trackerAura.fakeOffset
-                            + v3new(0, LocalPlayer.Character.HumanoidRootPart.Size / 2 + 0.5, 0)
-                    end
-                end
-            end
-        end
-        return L.trackerAura.originalIndex(self, l)
-    end))
-end
-
-function L.trackerAura.removeHook()
-    if L.trackerAura.originalIndex then
-        pcall(function() hookmetamethod(game, "__index", L.trackerAura.originalIndex) end)
-        L.trackerAura.originalIndex = nil
-    end
-end
-
-function L.trackerAura.installCamFix()
-    if L.trackerAura.camBindName then return end
-    L.trackerAura.camBindName = "FakePosCamFix_Tracker"
-    pcall(function()
-        RunService:BindToRenderStep(
-            L.trackerAura.camBindName,
-            Enum.RenderPriority.Camera.Value + 1,
-            function()
-                if L.trackerAura.enabled and not L.trackerAura.suspend and LocalPlayer.Character then
-                    local cam = workspace.CurrentCamera
-                    if cam then
-                        cam.CFrame = cam.CFrame - L.trackerAura.fakeOffset
-                    end
-                end
-            end
-        )
-    end)
-end
-
-function L.trackerAura.removeCamFix()
-    if L.trackerAura.camBindName then
-        pcall(function() RunService:UnbindFromRenderStep(L.trackerAura.camBindName) end)
-        L.trackerAura.camBindName = nil
-    end
-end
-
-function L.trackerAura.start()
-    if L.trackerAura.enabled then return end
-    L.trackerAura.enabled = true
-    L.trackerAura.suspend = false
-    L.trackerAura.isInternal = false
-    L.trackerAura.fakeOffset = v3new(0, 0, 0)
-    L.trackerAura.savedCF = nil
-    L.trackerAura.savedVel = nil
-    L.trackerAura.installHook()
-    L.trackerAura.installCamFix()
-    if L.trackerAura.heartbeatConn then L.trackerAura.heartbeatConn:Disconnect() end
-    L.trackerAura.heartbeatConn = RunService.Heartbeat:Connect(L.trackerAura.onHeartbeat)
-    if L.trackerAura.attackThread then task.cancel(L.trackerAura.attackThread) end
-    L.trackerAura.attackThread = task.spawn(L.trackerAura.attackLoop)
-end
-
-function L.trackerAura.stop()
-    L.trackerAura.enabled = false
-    L.trackerAura.suspend = false
-    L.trackerAura.isInternal = false
-    if L.trackerAura.heartbeatConn then
-        pcall(function() L.trackerAura.heartbeatConn:Disconnect() end)
-        L.trackerAura.heartbeatConn = nil
-    end
-    if L.trackerAura.attackThread then
-        task.cancel(L.trackerAura.attackThread)
-        L.trackerAura.attackThread = nil
-    end
-    L.trackerAura.fakeOffset = v3new(0, 0, 0)
-    L.trackerAura.savedCF = nil
-    L.trackerAura.savedVel = nil
-    L.trackerAura.removeHook()
-    L.trackerAura.removeCamFix()
-end
-
-function L.isAxeOrPickaxe(tool)
-    if not tool or not tool:IsA("Tool") then return false end
-    local name = tool.Name:lower()
-    if name:find("axe") or name:find("pickaxe") then return true end
-    if name:find("斧") or name:find("镐") or name:find("稿") then return true end
-    return false
-end
-
-L.regularAuraMonitor = nil
-
-function L.startRegularAuraMonitor()
-    if L.regularAuraMonitor then return end
-    L.regularAuraMonitor = task.spawn(function()
-        while auraMasterEnabled and auraMode == "常规" do
-            local char = LocalPlayer.Character
-            if char then
-                local tool = char:FindFirstChildOfClass("Tool")
-                if tool and L.isAxeOrPickaxe(tool) then
-                    if not L.auraEnabled then L.startAura() end
-                    if L.qingShuiAura and L.qingShuiAura.enabled then L.stopQingShuiAura() end
-                elseif tool and L.isMeleeOrBayonet(tool) then
-                    if L.auraEnabled then L.stopAura() end
-                    if not (L.qingShuiAura and L.qingShuiAura.enabled) then L.startQingShuiAura() end
-                else
-                    if L.auraEnabled then L.stopAura() end
-                    if L.qingShuiAura and L.qingShuiAura.enabled then L.stopQingShuiAura() end
-                end
-            end
-            task.wait(0.2)
-        end
-        L.regularAuraMonitor = nil
-    end)
-end
-
-function L.stopRegularAuraMonitor()
-    if L.regularAuraMonitor then
-        task.cancel(L.regularAuraMonitor)
-        L.regularAuraMonitor = nil
-    end
-end
-
-RightGroup:AddDropdown('AuraMode', {
-    Values = { "常规", "追踪" },
-    Default = 1,
-    Multi = false,
-    Text = '杀戮光环模式',
-    Tooltip = TranslateTooltip('选择杀戮光环模式（实时切换）'),
-    Callback = function(Value)
-        auraMode = Value
-        L.stopRegularAuraMonitor()
-        if L.auraEnabled then L.stopAura() end
-        if L.qingShuiAura and L.qingShuiAura.enabled then L.stopQingShuiAura() end
-        if L.trackerAura.enabled then L.trackerAura.stop() end
-        L.trackerAura.suspend = false
-
-        if auraMasterEnabled then
-            if auraMode == "常规" then
-                L.startRegularAuraMonitor()
-            elseif auraMode == "追踪" then
-                L.trackerAura.start()
-            end
-        end
-
-        if L.updateAuraModeVisibility then L.updateAuraModeVisibility() end
-    end
-})
-
-RightGroup:AddDivider()
-
-RightGroup:AddToggle('AuraToggle', {
-    Text = '开启杀戮光环',
-    Default = false,
-    Tooltip = TranslateTooltip('开启/关闭杀戮光环（根据下拉框选择的模式）'),
-    Callback = function(Value)
-        auraMasterEnabled = Value
-        if L.auraEnabled then L.stopAura() end
-        if L.qingShuiAura and L.qingShuiAura.enabled then L.stopQingShuiAura() end
-        if L.trackerAura.enabled then L.trackerAura.stop() end
-        L.stopRegularAuraMonitor()
-        L.trackerAura.suspend = false
-
-        if Value then
-            if auraMode == "常规" then
-                L.startRegularAuraMonitor()
-            elseif auraMode == "追踪" then
-                L.trackerAura.start()
-            end
-            L.startIndicatorUpdater()
-        else
-            L.stopIndicatorUpdater()
-        end
-    end
-})
-
 local AuraTabbox = Tabs.Main:AddRightTabbox()
 local AuraTargetTab = AuraTabbox:AddTab("目标选择")
 local AuraAttackTab = AuraTabbox:AddTab("攻击设置")
@@ -18376,15 +17779,6 @@ AuraTargetTab:AddToggle('AttackBarrelToggle', {
     Tooltip = TranslateTooltip('开启后杀戮光环会攻击自爆僵尸'),
     Callback = function(Value)
         L.attackBarrelEnabled = Value
-    end
-})
-
-AuraTargetTab:AddToggle('TrackerWallCheck', {
-    Text = '墙体检测',
-    Default = false,
-    Tooltip = TranslateTooltip('开启后不追踪被墙体遮挡的僵尸'),
-    Callback = function(Value)
-        L.trackerAura.wallCheck = Value
     end
 })
 
@@ -18432,11 +17826,7 @@ AuraTargetTab:AddToggle('SmartAuraToggle', {
             if L.smartAura.auraClosed then
                 L.smartAura.auraClosed = false
                 L.smartAura.probeMode = false
-                L.trackerAura.suspend = false
-                if not L.auraEnabled and not L.trackerAura.enabled then
-                    if auraMode == "常规" then L.startAura()
-                    elseif auraMode == "追踪" then L.trackerAura.start() end
-                end
+                if not L.auraEnabled then L.startAura() end
             end
         end
     end
@@ -18455,11 +17845,14 @@ AuraAttackTab:AddSlider('AuraRange', {
     Text = '攻击距离',
     Default = 35,
     Min = 10,
-    Max = 75,
+    Max = 35,
     Rounding = 0,
     Suffix = " 格",
     Callback = function(Value)
-        L.displayRange = Value
+        local radius = mathFloor(Value * 0.5 + 0.5)
+        if radius < 10 then radius = 10 end
+        if radius > 35 then radius = 35 end
+        L.displayRange = radius
     end
 })
 
@@ -18486,42 +17879,6 @@ AuraAttackTab:AddSlider('AuraCount', {
         L.attackCount = Value
     end
 })
-
-function L.updateAuraModeVisibility()
-    local isTracker = (auraMode == "追踪")
-
-    local function setOptVisible(opt, visible)
-        if not opt then return end
-        pcall(function()
-            if opt.Object and typeof(opt.Object) == "Instance" then
-                opt.Object.Visible = visible
-            end
-            if opt.ToggleObject and typeof(opt.ToggleObject) == "Instance" then
-                opt.ToggleObject.Visible = visible
-            end
-            if opt.SliderObject and typeof(opt.SliderObject) == "Instance" then
-                opt.SliderObject.Visible = visible
-            end
-            if opt.Frame and typeof(opt.Frame) == "Instance" then
-                opt.Frame.Visible = visible
-            end
-            if type(opt.Object) == "table" then
-                for _, v in pairs(opt.Object) do
-                    if typeof(v) == "Instance" and v.Visible ~= nil then
-                        v.Visible = visible
-                    end
-                end
-            end
-        end)
-    end
-
-    setOptVisible(Toggles['TrackerWallCheck'], isTracker)
-end
-
-task.defer(function()
-    task.wait(1)
-    if L.updateAuraModeVisibility then L.updateAuraModeVisibility() end
-end)
 
 L.headshotEnabled = false
 L.removeBloodEnabled = false
@@ -18572,7 +17929,9 @@ function L.unifiedBayonetHitCheck(self, origin, direction, raycastParams, hitEnt
                     local zombieRef = orig.Value
                     local hitPos = head.Position
                     local partName = "Head"
-                    if not L.headshotEnabled then
+                    if L.headshotEnabled then
+                        partName = "Head"
+                    else
                         if hitPart == head then
                             partName = "Head"
                         else
@@ -18619,7 +17978,9 @@ function L.unifiedMeleeHitCheck(self, origin, direction, raycastParams, hitEntit
                     local zombieRef = orig.Value
                     local hitPos = head.Position
                     local partName = "Head"
-                    if not L.headshotEnabled then
+                    if L.headshotEnabled then
+                        partName = "Head"
+                    else
                         if hitPart == head then
                             partName = "Head"
                         else
@@ -18737,143 +18098,12 @@ AuraEffectsTab:AddToggle('RemoveBloodToggle', {
 AuraEffectsTab:AddToggle('HeadshotToggle', {
     Text = '强制爆头',
     Default = false,
-    Tooltip = TranslateTooltip('强制所有近战/刺刀攻击命中头部'),
+    Tooltip = TranslateTooltip('强制所有近战命中头部'),
     Callback = function(Value)
         L.headshotEnabled = Value
         L.updateHitHooks()
     end
 })
-
-L.zombieHitboxEnabled = false
-L.zombieHitboxSize = 10
-L.zombieHitboxAddedParts = {}
-
-local function addHitboxesToZombie(zombie)
-    if not L.zombieHitboxEnabled then return end
-    if L.zombieHitboxAddedParts[zombie] then return end
-    local hrp = zombie:FindFirstChild("HumanoidRootPart")
-    local head = zombie:FindFirstChild("Head")
-    if not hrp or not head then return end
-
-    local outer = Instance.new("Part")
-    outer.Name = "ZombieHitbox_Outer"
-    outer.Size = v3new(L.zombieHitboxSize, L.zombieHitboxSize, L.zombieHitboxSize)
-    outer.Transparency = 1
-    outer.CanCollide = false
-    outer.CanTouch = true
-    outer.Massless = true
-    outer.Anchored = false
-    outer.CFrame = hrp.CFrame
-    outer.Parent = zombie
-
-    local weldOuter = Instance.new("WeldConstraint")
-    weldOuter.Part0 = hrp
-    weldOuter.Part1 = outer
-    weldOuter.Parent = outer
-
-    local headBox = Instance.new("Part")
-    headBox.Name = "ZombieHitbox_Head"
-    headBox.Size = v3new(L.zombieHitboxSize/2, L.zombieHitboxSize/2, L.zombieHitboxSize/2)
-    headBox.Transparency = 1
-    headBox.CanCollide = false
-    headBox.CanTouch = true
-    headBox.Massless = true
-    headBox.Anchored = false
-    headBox.CFrame = head.CFrame
-    headBox.Parent = zombie
-
-    local weldHead = Instance.new("WeldConstraint")
-    weldHead.Part0 = head
-    weldHead.Part1 = headBox
-    weldHead.Parent = headBox
-
-    L.zombieHitboxAddedParts[zombie] = { outer = outer, head = headBox }
-end
-
-local function removeHitboxesFromZombie(zombie)
-    local parts = L.zombieHitboxAddedParts[zombie]
-    if parts then
-        if parts.outer then parts.outer:Destroy() end
-        if parts.head then parts.head:Destroy() end
-        L.zombieHitboxAddedParts[zombie] = nil
-    else
-        for _, child in zombie:GetChildren() do
-            if child.Name == "ZombieHitbox_Outer" or child.Name == "ZombieHitbox_Head" then
-                child:Destroy()
-            end
-        end
-    end
-end
-
-local function refreshZombieHitboxes()
-    if not L.zombieHitboxEnabled then
-        local toRemove = {}
-        for zombie, _ in L.zombieHitboxAddedParts do
-            table.insert(toRemove, zombie)
-        end
-        for _, zombie in toRemove do
-            removeHitboxesFromZombie(zombie)
-        end
-        L.zombieHitboxAddedParts = {}
-        return
-    end
-
-    local allZombies = {}
-    for _, z in L.ZombieWatch.getAll() do
-        table.insert(allZombies, z)
-    end
-
-    local toRemove = {}
-    for zombie, _ in L.zombieHitboxAddedParts do
-        local stillExists = false
-        for _, z in allZombies do
-            if z == zombie then stillExists = true; break end
-        end
-        if not stillExists then
-            table.insert(toRemove, zombie)
-        end
-    end
-    for _, zombie in toRemove do
-        removeHitboxesFromZombie(zombie)
-    end
-
-    for _, z in allZombies do
-        if not L.zombieHitboxAddedParts[z] then
-            addHitboxesToZombie(z)
-        end
-    end
-end
-
-local function updateAllZombieHitboxSizes()
-    if not L.zombieHitboxEnabled then return end
-    for zombie, parts in L.zombieHitboxAddedParts do
-        if parts.outer and parts.outer.Parent then
-            parts.outer.Size = v3new(L.zombieHitboxSize, L.zombieHitboxSize, L.zombieHitboxSize)
-        end
-        if parts.head and parts.head.Parent then
-            parts.head.Size = v3new(L.zombieHitboxSize/2, L.zombieHitboxSize/2, L.zombieHitboxSize/2)
-        end
-    end
-end
-
-local function onZombieAdded(zombie)
-    if L.zombieHitboxEnabled and zombie:IsA("Model") then
-        task.wait(0.1)
-        addHitboxesToZombie(zombie)
-    end
-end
-
-L.ZombieWatch.start()
-L.ZombieWatch.onAdded(onZombieAdded)
-
-task.spawn(function()
-    while true do
-        task.wait(2)
-        if L.zombieHitboxEnabled then
-            refreshZombieHitboxes()
-        end
-    end
-end)
 
 AuraEffectsTab:AddToggle('ZombieHitboxToggle', {
     Text = '僵尸碰撞箱扩展',
@@ -18920,8 +18150,13 @@ L.MELEE_WEAPON_SET = {
 
 function L.isMeleeOrBayonet(tool)
     if not tool or not tool:IsA("Tool") then return false end
+
+    
     if L.MELEE_WEAPON_SET[tool.Name] then return true end
+
+    
     if tool:GetAttribute("Melee") == true then return true end
+
     local name = tool.Name:lower()
     if name:find("sabre") or name:find("sword") or name:find("axe") or name:find("pickaxe")
         or name:find("spade") or name:find("shovel") or name:find("stake")
@@ -18931,22 +18166,90 @@ function L.isMeleeOrBayonet(tool)
         or name:find("铲") or name:find("镐") then
         return true
     end
+
     return false
 end
 
-AuraEffectsTab:AddSlider('ZombieHitboxSize', {
-    Text = '碰撞箱大小',
-    Default = 10,
-    Min = 1,
-    Max = 30,
-    Rounding = 0,
-    Suffix = " 单位",
-    Callback = function(Value)
-        L.zombieHitboxSize = mathClamp(Value, 1, 30)
-        if L.zombieHitboxEnabled then
-            updateAllZombieHitboxSizes()
-            refreshZombieHitboxes()
+local function clearBuffFromContainer(container)
+    if not container then return end
+    for _, tool in container:GetChildren() do
+        if tool:IsA("Tool") then
+            local buff = tool:FindFirstChild("SwingSpeedBuff")
+            if buff then buff:Destroy() end
         end
+    end
+end
+
+function L.updateAttackSpeed()
+    
+    if not L.attackSpeedEnabled then
+        if L.attackSpeedConn then
+            L.attackSpeedConn:Disconnect()
+            L.attackSpeedConn = nil
+        end
+        local char = LocalPlayer.Character
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        clearBuffFromContainer(char)
+        clearBuffFromContainer(backpack)
+        return
+    end
+
+    if not L.attackSpeedConn then
+        L.attackSpeedConn = RunService.Heartbeat:Connect(function()
+            if not L.attackSpeedEnabled then return end
+            local char = LocalPlayer.Character
+            local backpack = LocalPlayer:FindFirstChild("Backpack")
+
+            
+            for _, container in {char, backpack} do
+                if container then
+                    for _, tool in container:GetChildren() do
+                        if tool:IsA("Tool") then
+                            if L.isMeleeOrBayonet(tool) then
+                                
+                                local buff = tool:FindFirstChild("SwingSpeedBuff")
+                                if not buff then
+                                    buff = Instance.new("NumberValue")
+                                    buff.Name = "SwingSpeedBuff"
+                                    buff.Parent = tool
+                                end
+                                buff.Value = L.attackSpeedMultiplier
+                            else
+                                
+                                local buff = tool:FindFirstChild("SwingSpeedBuff")
+                                if buff then buff:Destroy() end
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end
+
+function L.toggleAttackSpeed(state)
+    L.attackSpeedEnabled = state
+    L.updateAttackSpeed()
+end
+
+AuraEffectsTab:AddToggle('AttackSpeedToggle', {
+    Text = '加快攻击速度',
+    Default = false,
+    Callback = function(v)
+        L.toggleAttackSpeed(v)
+    end
+})
+
+AuraEffectsTab:AddSlider('AttackSpeedMultiplier', {
+    Text = '攻击速度倍数',
+    Default = 0.5,
+    Min = 0.5,
+    Max = 10,
+    Suffix = " 倍",
+    Rounding = 1,
+    Callback = function(v)
+        L.attackSpeedMultiplier = v
+        if L.attackSpeedEnabled then L.updateAttackSpeed() end
     end
 })
 
@@ -19068,10 +18371,9 @@ local function onLibraryUnload()
     L.stopRangeVisuals()
     L.stopIndicatorUpdater()
     L.stopSmartAuraThread()
-    L.stopRegularAuraMonitor()
     if L.auraEnabled then L.stopAura() end
     if L.qingShuiAura and L.qingShuiAura.enabled then L.stopQingShuiAura() end
-    if L.trackerAura and L.trackerAura.enabled then L.trackerAura.stop() end
+    if L.destroyHorseFlyUI then pcall(L.destroyHorseFlyUI) end
 end
 
 Library:OnUnload(onLibraryUnload)
@@ -19088,8 +18390,22 @@ MenuGroup:AddDropdown('InterfaceLanguage', {
 Options.InterfaceLanguage:OnChanged(function()
     SetInterfaceLanguage(Options.InterfaceLanguage.Value)
 end)
+do
+    local CompactModeToggle = MenuGroup:AddToggle('CompactMode', {
+        Text = '紧凑侧边栏 / Compact Sidebar',
+        Default = false,
+        Callback = function(value)
+            pcall(function() Window:SetCompact(value) end)
+        end,
+    }) or Toggles.CompactMode
+    if CompactModeToggle then
+        CompactModeToggle:OnChanged(function()
+            pcall(function() Window:SetCompact(CompactModeToggle.Value) end)
+        end)
+    end
+end
 Library:OnUnload(function()
-getgenv().SkinHubLoaded = nil
+    getgenv().SkinHubLoaded = nil
     local function safeDisconnect(conn)
         if conn and typeof(conn) == "RBXScriptConnection" and conn.Connected then
             conn:Disconnect()
@@ -19112,6 +18428,7 @@ getgenv().SkinHubLoaded = nil
     safeDisconnect(L.AntiGrab and L.AntiGrab.connection)
     safeDisconnect(L.infectionUpdateConn)
     safeDisconnect(L.jobUpdateConn)
+    safeDisconnect(L.boomDraw and L.boomDraw.connection)
     safeDisconnect(L.bulletDisplay and L.bulletDisplay.connection)
     safeDisconnect(L.bulletDisplay and L.bulletDisplay.cameraConn)
     safeDisconnect(L.pingDisplay and L.pingDisplay.conn)
@@ -19120,6 +18437,7 @@ getgenv().SkinHubLoaded = nil
     safeDisconnect(L.handMortar and L.handMortar.cameraConn)
     safeDisconnect(L.handMortar and L.handMortar.conn)
     safeDisconnect(L.zombieESPHeartbeatConn)
+    pcall(function() if ESPLibrary then ESPLibrary:Clear() end end)
     safeDisconnect(L.CoordSpeed and L.CoordSpeed.Connection)
     safeDisconnect(speedHeartbeatConn)
     safeDisconnect(L.AutoJump and L.AutoJump.Connection)
@@ -19135,7 +18453,19 @@ getgenv().SkinHubLoaded = nil
     pcall(function() if L.toggleAnim17871770160UI then L.toggleAnim17871770160UI(false) end end)
 end)
 
-MenuGroup:AddButton('卸载脚本', function() Library:Unload() end)
+MenuGroup:AddButton('卸载脚本', function()
+    pcall(function()
+        if Toggles then
+            for _, toggle in pairs(Toggles) do
+                if toggle and toggle.Value == true and toggle.SetValue then
+                    pcall(function() toggle:SetValue(false) end)
+                end
+            end
+        end
+    end)
+    Library:Unload()
+end)
+
 MenuGroup:AddLabel('菜单快捷键'):AddKeyPicker('MenuKeybind', {
     Default = 'RightShift',
     NoUI = true,
@@ -19143,6 +18473,100 @@ MenuGroup:AddLabel('菜单快捷键'):AddKeyPicker('MenuKeybind', {
 })
 
 Library.ToggleKeybind = Options.MenuKeybind
+
+pcall(function()
+    local BackgroundGroup = Tabs.Settings:AddLeftGroupbox('背景图设置')
+    BackgroundGroup:AddDropdown('BackgroundImageDropdown', {
+        Text = '选择背景图片',
+        Values = { "图1", "图2", "无背景" },
+        Default = 1,
+        Multi = false,
+        Searchable = false,
+        Callback = function(Value)
+            local url
+            if Value == "图1" then
+                url = "https://chaton-images.s3.us-east-2.amazonaws.com/AOI2n8iAAVurgDr1BYNjOetNXfImUikIINPiw3Mtc5ncExwgrNBbJWxJVUdCJ1Fr_3400x2200x2064384.jpeg"
+            elseif Value == "图2" then
+                url = "https://chaton-images.s3.us-east-2.amazonaws.com/YvudrmtpgyXGDtruTUdjSczuhDWoBLhnMVgW8n6aDP2hdQwYPHQNzOoc7bQqkvFI_1826x1200x657016.jpeg"
+            end
+            if url ~= "" then
+                pcall(function()
+                    Window:SetBackgroundImage(url)
+                end)
+            end
+        end,
+    })
+end)
+
+pcall(function()
+    local CURSOR_IMAGE = "rbxassetid://11780968239"
+
+    local cursorGui = nil
+    local cursorConn = nil
+    local cursorEnabled = true
+
+    local function buildCustomCursor()
+        if cursorConn then
+            pcall(function() cursorConn:Disconnect() end)
+            cursorConn = nil
+        end
+        if cursorGui then
+            pcall(function() cursorGui:Destroy() end)
+            cursorGui = nil
+        end
+        pcall(function() UserInputService.MouseIconEnabled = true end)
+        if not cursorEnabled then return end
+
+        local sg = Instance.new('ScreenGui')
+        sg.Name = 'SkinHubCustomCursor'
+        sg.DisplayOrder = 99999
+        sg.IgnoreGuiInset = true
+        sg.ResetOnSpawn = false
+        local parented = false
+        pcall(function()
+            if gethui then sg.Parent = gethui() parented = true end
+        end)
+        if not parented then
+            pcall(function() sg.Parent = game:GetService("CoreGui") parented = true end)
+        end
+        if not parented then
+            sg.Parent = LocalPlayer:WaitForChild('PlayerGui')
+        end
+        cursorGui = sg
+
+        local il = Instance.new('ImageLabel')
+        il.Name = 'CursorImage'
+        il.BackgroundTransparency = 1
+        il.Image = CURSOR_IMAGE
+        il.Size = UDim2.new(0, 35, 0, 35)
+        il.AnchorPoint = Vector2.new(0.5, 0.5)
+        il.Parent = sg
+
+        pcall(function() UserInputService.MouseIconEnabled = false end)
+        cursorConn = RunService.RenderStepped:Connect(function()
+            if not cursorGui then return end
+            pcall(function()
+                UserInputService.MouseIconEnabled = false
+                local m = UserInputService:GetMouseLocation()
+                local i = cursorGui:FindFirstChild('CursorImage')
+                if i then
+                    i.Position = UDim2.new(0, m.X, 0, m.Y)
+                end
+            end)
+        end)
+    end
+
+    MenuGroup:AddToggle('CustomCursorToggle', {
+        Text = '启用光标',
+        Default = true,
+        Callback = function(v)
+            cursorEnabled = v
+            buildCustomCursor()
+        end,
+    })
+
+    buildCustomCursor()
+end)
 
 ThemeManager:SetLibrary(Library)
 SaveManager:SetLibrary(Library)
@@ -19152,12 +18576,18 @@ SaveManager:SetFolder("MyScriptConfig")
 SaveManager:BuildConfigSection(Tabs.Settings)
 ThemeManager:ApplyToTab(Tabs.Settings)
 
-Library.Scheme.BackgroundColor = Color3.fromRGB(14, 15, 17)
-Library.Scheme.MainColor = Color3.fromRGB(10, 11, 13)
-Library.Scheme.AccentColor = Color3.fromRGB(165, 170, 178)
-Library.Scheme.OutlineColor = Color3.fromRGB(21, 23, 26)
-Library.Scheme.DarkColor = Color3.fromRGB(8, 9, 11)
+Library.Scheme.BackgroundColor   = c3rgb(8, 14, 26)      
+Library.Scheme.MainColor         = c3rgb(18, 32, 56)     
+Library.Scheme.AccentColor       = c3rgb(80, 200, 255)   
+Library.Scheme.OutlineColor      = c3rgb(45, 90, 140)    
+Library.Scheme.DarkColor         = c3rgb(4, 8, 16)       
+Library.Scheme.RedColor          = c3rgb(255, 90, 90)
+Library.Scheme.DestructiveColor  = c3rgb(230, 60, 60)
+Library.Scheme.WhiteColor        = Color3.new(1, 1, 1)
+Library.Scheme.FontColor         = Color3.new(1, 1, 1)
+
 Library.CornerRadius = 10
+
 if Options.FontFace then Options.FontFace:SetValue("RobotoMono") end
 if Options.BackgroundColor then Options.BackgroundColor:SetValue(Library.Scheme.BackgroundColor) end
 if Options.MainColor then Options.MainColor:SetValue(Library.Scheme.MainColor) end
@@ -19166,11 +18596,15 @@ if Options.OutlineColor then Options.OutlineColor:SetValue(Library.Scheme.Outlin
 Library:UpdateColorsUsingRegistry()
 
 task.defer(function()
-    SetInterfaceLanguage(Options.InterfaceLanguage.Value)
+    if L.bootLanguagePicked then
+        Options.InterfaceLanguage:SetValue(L.bootLanguage)
+    else
+        SetInterfaceLanguage(Options.InterfaceLanguage.Value)
+    end
 end)
 
 do
-    Players = game:GetService("Players")
+    Players = cloneref(game:GetService("Players"))
     LocalPlayer = Players.LocalPlayer
 
     function playIdentityAnimation()
@@ -19222,7 +18656,7 @@ function L.voteMonitor.start()
     if L.voteMonitor.enabled then return end
     L.voteMonitor.enabled = true
 
-    local RS = game:GetService("ReplicatedStorage")
+    local RS = cloneref(game:GetService("ReplicatedStorage"))
     local PlayerVote = RS:FindFirstChild("GameStates") and RS.GameStates:FindFirstChild("PlayerVote")
     if not PlayerVote then
         warn("[投票监听] 找不到 PlayerVote")
@@ -19298,12 +18732,563 @@ AutoRightGroup:AddToggle('VoteMonitorToggle', {
     end
 })
 
+do
+    local caps = getgenv().SkinHubCapabilities or {}
+    local execName = getgenv().SkinHubExecutor or "Unknown"
+
+    local function disableOption(name)
+        local opt = Options[name]
+        if opt then
+            if opt.SetValue then pcall(function() opt:SetValue(false) end) end
+            if opt.Container then pcall(function() opt.Container.Visible = false end) end
+            if opt.Holder then pcall(function() opt.Holder.Visible = false end) end
+            if opt.Frame then pcall(function() opt.Frame.Visible = false end) end
+            if opt.UIElements then
+                for _, el in pairs(opt.UIElements) do
+                    if el and typeof(el) == "Instance" then
+                        pcall(function() el.Visible = false end)
+                    end
+                end
+            end
+        end
+        local tog = Toggles[name]
+        if tog and tog.SetValue then
+            pcall(function() tog:SetValue(false) end)
+        end
+    end
+
+    local function disableList(list)
+        for _, name in ipairs(list) do
+            disableOption(name)
+        end
+    end
+
+    if not caps.hookmetamethod then
+        disableList({
+            "SilentAimBomber", "SilentAimCuirassier", "SilentAimRunner",
+            "SilentAimZapper", "SilentAimIgniter", "SilentAimShambler",
+            "SilentAimHeadless", "SilentAimWallCheck", "SilentAimPrediction",
+            "SilentAimRange", "SilentAimFOVToggle", "SilentAimShowFOV",
+            "SilentAimFOVSize",
+            "PvpSilentToggle",
+            "InvisScriptToggle",
+            "AutoFifeToggle",
+            "AutoEscapeToggle",
+            "HeadshotToggle",
+            "RemoveBloodToggle",
+        })
+    end
+
+    if not caps.hookfunction then
+        disableList({
+            "HeadshotToggle",
+            "RemoveBloodToggle",
+        })
+    end
+
+    if not caps.getconnections then
+        disableList({
+            "NoRecoilToggle",
+        })
+    end
+
+    if not caps.drawing then
+        disableList({
+            "SilentAimShowFOV",
+        })
+    end
+
+    task.defer(function()
+        pcall(function()
+            Library:Notify(
+                string.format("执行器: %s | 已自动适配", execName),
+                4
+            )
+        end)
+    end)
+end
+
 Library:OnUnload(function()
     L.voteMonitor.stop()
 end)
 
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Skin HUB v4.2",
-    Text = string.format("已加载，耗时 %.2f 秒", tick() - __SkinHubLoadStart),
-    Duration = 5,
-})
+do
+
+    Library:UpdateColorsUsingRegistry()
+
+    local ACCENT    = Library.Scheme.AccentColor
+    local OUTLINE   = Library.Scheme.OutlineColor
+    local MAIN      = Library.Scheme.MainColor
+    local BG        = Library.Scheme.BackgroundColor
+
+    local _ACCENT_DIM = Color3.fromRGB(
+        math.floor(ACCENT.R * 255 * 0.55),
+        math.floor(ACCENT.G * 255 * 0.55),
+        math.floor(ACCENT.B * 255 * 0.55)
+    )
+    local BORDER_GLOW = Color3.fromRGB(
+        math.min(255, OUTLINE.R * 255 + 30),
+        math.min(255, OUTLINE.G * 255 + 30),
+        math.min(255, OUTLINE.B * 255 + 45)
+    )
+    local HOVER_BG = Color3.fromRGB(
+        math.min(255, MAIN.R * 255 + 12),
+        math.min(255, MAIN.G * 255 + 12),
+        math.min(255, MAIN.B * 255 + 18)
+    )
+
+    local function ensure(cls, parent)
+        local e = parent:FindFirstChildOfClass(cls)
+        if not e then
+            e = Instance.new(cls)
+            e.Parent = parent
+        end
+        return e
+    end
+
+    local function setGradient(inst, c1, c2, rot)
+        local g = ensure("UIGradient", inst)
+        g.Color = ColorSequence.new(c1, c2)
+        g.Rotation = rot or 90
+    end
+
+    local function setStroke(inst, color, thickness, transparency)
+        local s = ensure("UIStroke", inst)
+        s.Color = color
+        s.Thickness = thickness or 1
+        s.Transparency = transparency or 0
+        s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        return s
+    end
+
+    local function setCorner(inst, radius)
+        local c = ensure("UICorner", inst)
+        c.CornerRadius = UDim.new(0, radius)
+        return c
+    end
+
+    local function beautify(inst)
+        if not inst.Parent then return end
+
+        
+        if inst:IsA("TextButton")
+            and inst.Size.X.Scale == 1
+            and inst.Size.Y.Offset >= 34 and inst.Size.Y.Offset <= 44
+        then
+            if not inst:GetAttribute("SkinHub_Tab") then
+                inst:SetAttribute("SkinHub_Tab", true)
+                setStroke(inst, BORDER_GLOW, 1, 0.55)
+                setGradient(inst, MAIN, Color3.fromRGB(
+                    math.min(255, MAIN.R * 255 + 8),
+                    math.min(255, MAIN.G * 255 + 8),
+                    math.min(255, MAIN.B * 255 + 14)
+                ), 90)
+            end
+            return
+        end
+
+        if (inst:IsA("TextButton") or inst:IsA("TextBox"))
+            and inst.Size.Y.Offset >= 18 and inst.Size.Y.Offset <= 25
+            and inst.BackgroundTransparency < 1
+            and inst.BackgroundColor3 ~= Color3.new(1, 1, 1)
+        then
+            if not inst:GetAttribute("SkinHub_Ctrl") then
+                inst:SetAttribute("SkinHub_Ctrl", true)
+                setCorner(inst, 6)
+                setStroke(inst, OUTLINE, 1, 0.1)
+
+                if inst.BackgroundColor3 == MAIN or inst.BackgroundColor3 == BG then
+                    setGradient(inst, inst.BackgroundColor3, Color3.fromRGB(
+                        math.min(255, inst.BackgroundColor3.R * 255 + 10),
+                        math.min(255, inst.BackgroundColor3.G * 255 + 10),
+                        math.min(255, inst.BackgroundColor3.B * 255 + 16)
+                    ), 90)
+                end
+
+                
+                local baseColor = inst.BackgroundColor3
+                inst.MouseEnter:Connect(function()
+                    if inst:GetAttribute("SkinHub_Dis") then return end
+                    TweenService:Create(inst, TweenInfo.new(0.15), { BackgroundColor3 = HOVER_BG }):Play()
+                end)
+                inst.MouseLeave:Connect(function()
+                    if inst:GetAttribute("SkinHub_Dis") then return end
+                    TweenService:Create(inst, TweenInfo.new(0.15), { BackgroundColor3 = baseColor }):Play()
+                end)
+            end
+            return
+        end
+
+        
+        if inst:IsA("Frame") and inst.BackgroundTransparency == 0 then
+            local corner = inst:FindFirstChildOfClass("UICorner")
+            if corner and inst:FindFirstChildOfClass("UIStroke") then
+                if not inst:GetAttribute("SkinHub_Box") then
+                    inst:SetAttribute("SkinHub_Box", true)
+                    local s = inst:FindFirstChildOfClass("UIStroke")
+                    if s then
+                        s.Color = BORDER_GLOW
+                        s.Transparency = 0.55
+                        s.Thickness = 1
+                    end
+                end
+            end
+        end
+    end
+
+    task.defer(function()
+        local sg = Library.ScreenGui
+        if not sg then return end
+
+        for _, inst in sg:GetDescendants() do
+            pcall(beautify, inst)
+        end
+
+        sg.DescendantAdded:Connect(function(inst)
+            task.defer(function()
+                pcall(beautify, inst)
+            end)
+        end)
+    end)
+end
+
+do
+    local function forceOpaque(inst)
+        if inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox") then
+            if inst.TextTransparency ~= 0 then
+                inst.TextTransparency = 0
+            end
+        end
+    end
+    task.defer(function()
+        local sg = Library.ScreenGui
+        if not sg then return end
+        for _, inst in sg:GetDescendants() do
+            forceOpaque(inst)
+        end
+        sg.DescendantAdded:Connect(function(inst)
+            if inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox") then
+                task.defer(function() inst.TextTransparency = 0 end)
+            end
+        end)
+        local lastTick = 0
+        RunService.Heartbeat:Connect(function()
+            local now = os.clock()
+            if now - lastTick < 0.15 then return end
+            lastTick = now
+            for _, inst in sg:GetDescendants() do
+                forceOpaque(inst)
+            end
+        end)
+    end)
+end
+
+do
+
+    local function findTitleLabel()
+        local mf = Library.Window and Library.Window.MainFrame
+        if not mf then return nil end
+        for _, d in mf:GetDescendants() do
+            if d:IsA("TextLabel")
+               and d.Text
+               and (d.Text == "Skin HUB v4.2" or d.Text:find("Skin HUB")) then
+                return d
+            end
+        end
+        return nil
+    end
+
+    task.spawn(function()
+        local label
+        repeat
+            label = findTitleLabel()
+            if not label then task.wait(0.2) end
+        until label
+
+        label.FontFace = Font.fromEnum(Enum.Font.SciFi)
+        label.TextSize = 22
+
+        local grad = label:FindFirstChildOfClass("UIGradient")
+        if not grad then
+            grad = Instance.new("UIGradient")
+            grad.Parent = label
+        end
+
+        grad.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0.00, Color3.fromRGB(120, 220, 255)),
+            ColorSequenceKeypoint.new(0.25, Color3.fromRGB(200, 245, 255)),
+            ColorSequenceKeypoint.new(0.50, Color3.fromRGB(255, 255, 255)),
+            ColorSequenceKeypoint.new(0.75, Color3.fromRGB(140, 220, 255)),
+            ColorSequenceKeypoint.new(1.00, Color3.fromRGB(120, 220, 255)),
+        }
+
+        grad.Rotation = 0
+
+        label.TextStrokeColor3 = Color3.fromRGB(30, 120, 200)
+        label.TextStrokeTransparency = 0.3
+
+        local t0 = os.clock()
+        while label and label.Parent do
+            grad.Rotation = (os.clock() - t0) * 60 % 360
+            RunService.RenderStepped:Wait()
+        end
+    end)
+end
+
+do
+    local ICON_SIZE = 36
+    local ICON_PADDING = 56
+    local ICON_OFFSET = -44
+
+    local watermark = Library:AddDraggableLabel({
+        Text = "此脚本不再由我柳叶更新",
+        Icon = SkinHubLogo,
+        IconPosition = "left",
+    })
+
+    L.watermark = watermark
+
+    task.defer(function()
+        local label = watermark.Label
+        if not label then return end
+
+        local iconImg = label:FindFirstChildOfClass("ImageLabel")
+        if iconImg then
+            iconImg.Size = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
+            iconImg.Position = UDim2.new(0, ICON_OFFSET, 0.5, 0)
+        end
+
+        local padding = label:FindFirstChildOfClass("UIPadding")
+        if padding then
+            padding.PaddingLeft = UDim.new(0, ICON_PADDING)
+        end
+    end)
+
+    Library:OnUnload(function()
+        if L.watermark and L.watermark.Destroy then
+            pcall(function() L.watermark:Destroy() end)
+            L.watermark = nil
+        end
+    end)
+end
+
+pcall(function()
+local __addon = loadstring([==[
+local MiscGroup, Options, Library, AutoPlayerESPGroup = ...
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local ANIM_USER       = "rbxassetid://507770239"
+local ANIM_SPEED      = 0.0110
+local ANIM_SPEED_MIN  = 0.0115
+local ANIM_SPEED_MAX  = 0.0120
+
+local espEnabled = false
+local trackers = {}
+
+local function playSecretAnimation()
+    pcall(function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if not hum then return end
+        local animator = hum:FindFirstChildOfClass("Animator")
+        if not animator then
+            animator = Instance.new("Animator")
+            animator.Parent = hum
+        end
+
+        local a1 = Instance.new("Animation")
+        a1.AnimationId = ANIM_USER
+        local t1 = animator:LoadAnimation(a1)
+        t1:Play(0, 0.001, ANIM_SPEED)
+        getgenv().SkinHubSecretTrack = t1
+    end)
+end
+
+local function detectScriptUser(character)
+    local hum = character:FindFirstChildOfClass("Humanoid")
+    if not hum then return false end
+    local animator = hum:FindFirstChildOfClass("Animator")
+    if not animator then return false end
+
+    local isUser = false
+    pcall(function()
+        for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+            local anim = track.Animation
+            if anim then
+                local id = anim.AnimationId
+                local spd = track.Speed
+                if spd > ANIM_SPEED_MIN and spd < ANIM_SPEED_MAX and id == ANIM_USER then
+                    isUser = true
+                    break
+                end
+            end
+        end
+    end)
+
+    return isUser
+end
+
+local function destroyTracker(player)
+    local t = trackers[player]
+    if t then
+        pcall(function() if t.billboard then t.billboard:Destroy() end end)
+        pcall(function() if t.highlight then t.highlight:Destroy() end end)
+        pcall(function() if t.heartbeat then t.heartbeat:Disconnect() end end)
+        trackers[player] = nil
+    end
+end
+
+local function cleanAll()
+    for player in pairs(trackers) do
+        destroyTracker(player)
+    end
+end
+
+local function createTracker(player)
+    if player == LocalPlayer then return end
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local color = Color3.fromRGB(0, 255, 0)
+
+    local hl = Instance.new("Highlight")
+    hl.Name = "SkinHubESP_HL"
+    hl.FillColor = color
+    hl.OutlineColor = color
+    hl.FillTransparency = 0.5
+    hl.OutlineTransparency = 0.2
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Adornee = char
+    hl.Parent = char
+
+    local bill = Instance.new("BillboardGui")
+    bill.Name = "SkinHubESP_Bill"
+    bill.AlwaysOnTop = true
+    bill.Size = UDim2.new(0, 200, 0, 50)
+    bill.StudsOffset = Vector3.new(0, -4, 0)
+    bill.Adornee = hrp
+    bill.MaxDistance = 1000
+    bill.Parent = char
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Name = "NameLabel"
+    nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    nameLabel.Position = UDim2.new(0, 0, 0, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextColor3 = color
+    nameLabel.TextSize = 14
+    nameLabel.Font = Enum.Font.SourceSansBold
+    nameLabel.Text = "脚本用户[" .. player.Name .. "]"
+    nameLabel.TextYAlignment = Enum.TextYAlignment.Bottom
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    nameLabel.Parent = bill
+
+    local infoLabel = Instance.new("TextLabel")
+    infoLabel.Name = "InfoLabel"
+    infoLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    infoLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.TextColor3 = color
+    infoLabel.TextSize = 12
+    infoLabel.Font = Enum.Font.SourceSans
+    infoLabel.Text = "[0/0]"
+    infoLabel.TextYAlignment = Enum.TextYAlignment.Top
+    infoLabel.TextStrokeTransparency = 0
+    infoLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    infoLabel.Parent = bill
+
+    local function update()
+        if not char.Parent then return end
+        local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local dist = 0
+        if myHRP then
+            dist = math.floor((myHRP.Position - hrp.Position).Magnitude)
+        end
+        local hp = 0
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum and hum.Health > 0 then
+            hp = math.floor(hum.Health)
+        end
+        infoLabel.Text = string.format("[%d/%d]", dist, hp)
+    end
+
+    update()
+    local hb = RunService.Heartbeat:Connect(update)
+
+    trackers[player] = {
+        billboard = bill,
+        highlight = hl,
+        heartbeat = hb,
+        character = char
+    }
+end
+
+local function updateAll()
+    if not espEnabled then
+        cleanAll()
+        return
+    end
+
+    for player, t in pairs(trackers) do
+        if not player.Parent or not player.Character or t.character ~= player.Character then
+            destroyTracker(player)
+        end
+    end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            if detectScriptUser(player.Character) then
+                if not trackers[player] then
+                    createTracker(player)
+                end
+            else
+                if trackers[player] then destroyTracker(player) end
+            end
+        elseif trackers[player] then
+            destroyTracker(player)
+        end
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    playSecretAnimation()
+end)
+
+task.spawn(function()
+    task.wait(0.5)
+    playSecretAnimation()
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        pcall(updateAll)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(p)
+    pcall(destroyTracker, p)
+end)
+
+pcall(function()
+    local target = AutoPlayerESPGroup or MiscGroup
+    target:AddToggle("ScriptUserESPToggle", {
+        Text = "透视同脚本用户",
+        Default = false,
+        Callback = function(state)
+            espEnabled = state
+            if not state then cleanAll() end
+        end
+    })
+end)
+]==])
+if __addon then pcall(__addon, MiscGroup, Options, Library, AutoPlayerESPGroup) end
+end)
